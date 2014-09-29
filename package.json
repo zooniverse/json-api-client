@@ -1,0 +1,20 @@
+{
+  "name": "json-api-client",
+  "version": "0.0.1",
+  "main": "./json-api-client",
+  "devDependencies": {
+    "browserify": "^5.12.1",
+    "coffeeify": "^0.7.0",
+    "derequire": "^1.2.0",
+    "node-static": "^0.7.6",
+    "nodemon": "^1.2.1",
+    "watchify": "^1.0.6"
+  },
+  "scripts": {
+    "build": "browserify --entry ./src/json-api-client.coffee --debug --extension .coffee --transform coffeeify | derequire > ./json-api-client.js",
+    "serve": "static --port 1502 --headers '{\"Cache-Control\": \"no-cache, must-revalidate\"}'",
+    "start": "npm run watch & npm run watch-demo & npm run serve",
+    "watch": "nodemon --watch ./src --exec \"npm run build\"",
+    "watch-demo": "watchify --entry ./demo.coffee --verbose --debug --extension .coffee --transform coffeeify --outfile ./demo.js"
+  }
+}
