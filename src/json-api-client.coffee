@@ -79,4 +79,6 @@ module.exports = class JSONAPIClient
   createType: (name) ->
     new Type name: name, apiClient: this
 
+module.exports.util = {makeHTTPRequest}
+
 window?.JSONAPIClient = module.exports
