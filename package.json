@@ -8,13 +8,12 @@
     "derequire": "^1.2.0",
     "node-static": "^0.7.6",
     "nodemon": "^1.2.1",
-    "watchify": "^1.0.6"
   },
   "scripts": {
-    "build": "browserify --entry ./src/json-api-client.coffee --debug --extension .coffee --transform coffeeify | derequire > ./json-api-client.js",
+    "build": "browserify --debug --entry ./src/json-api-client.coffee --extension .coffee --transform coffeeify --standalone JSONAPIClient | derequire > ./json-api-client.js",
+    "build-demo": "browserify --debug --entry ./demo.coffee --extension .coffee --transform coffeeify > ./demo.js",
     "serve": "static --port 1502 --headers '{\"Cache-Control\": \"no-cache, must-revalidate\"}'",
-    "start": "npm run watch & npm run watch-demo & npm run serve",
-    "watch": "nodemon --watch ./src --exec \"npm run build\"",
-    "watch-demo": "watchify --entry ./demo.coffee --verbose --debug --extension .coffee --transform coffeeify --outfile ./demo.js"
+    "start": "npm run watch & npm run serve",
+    "watch": "nodemon --watch ./src --watch ./demo.coffee --ext coffee --exec \"npm run build && npm run build-demo\""
   }
 }

@@ -1,7 +1,6 @@
 # Make a raw, non-API specific HTTP request.
 
-module.exports = (method, url, data, headers) ->
-  console.log 'Making', method, 'request to', url
+module.exports = (method, url, data, headers, modify) ->
   new Promise (resolve, reject) ->
     request = new XMLHttpRequest
     request.open method, encodeURI url
@@ -9,6 +8,9 @@ module.exports = (method, url, data, headers) ->
     if headers?
       for header, value of headers
         request.setRequestHeader header, value
+
+    if modify?
+      modify request
 
     request.onreadystatechange = (e) ->
       console.log 'Ready state:', (key for key, value of request when value is request.readyState and key isnt 'readyState')[0]
