@@ -7,7 +7,7 @@
     "coffeeify": "^0.7.0",
     "derequire": "^1.2.0",
     "node-static": "^0.7.6",
-    "nodemon": "^1.2.1",
+    "nodemon": "^1.2.1"
   },
   "scripts": {
     "build": "browserify --debug --entry ./src/json-api-client.coffee --extension .coffee --transform coffeeify --standalone JSONAPIClient | derequire > ./json-api-client.js",
