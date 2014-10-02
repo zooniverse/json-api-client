@@ -3,6 +3,13 @@ Emitter = require './emitter'
 mergeInto = require './merge-into'
 Resource = require './resource'
 
+defer = ->
+  deferral = {}
+  deferral.promise = new Promise (resolve, reject) ->
+    deferral.resolve = resolve
+    deferral.reject = reject
+  deferral
+
 module.exports = class Type extends Emitter
   name: ''
   apiClient: null
@@ -54,7 +61,7 @@ module.exports = class Type extends Emitter
 
     unless incoming.length is 0
       for id in incoming
-        @deferrals[id] = Promise.defer()
+        @deferrals[id] = defer()
         @resourcePromises[id] = @deferrals[id].promise
 
       url = [@getURL(), incoming.join ','].join '/'

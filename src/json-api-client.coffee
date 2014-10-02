@@ -14,6 +14,7 @@ module.exports = class JSONAPIClient
   types: null
 
   constructor: (@root, @headers) ->
+    @headers ?= {}
     @types = {}
     print.info 'Created a new JSON-API client at', @root
 

@@ -14,6 +14,6 @@
     "build-demo": "browserify --debug --entry ./demo.coffee --extension .coffee --transform coffeeify > ./demo.js",
     "serve": "static --port 1502 --headers '{\"Cache-Control\": \"no-cache, must-revalidate\"}'",
     "start": "npm run watch & npm run serve",
-    "watch": "nodemon --watch ./src --watch ./demo.coffee --ext coffee --exec \"npm run build && npm run build-demo\""
+    "watch": "nodemon --watch ./src --watch ./demo.coffee --ext coffee --exec \"npm run build ; npm run build-demo\""
   }
 }

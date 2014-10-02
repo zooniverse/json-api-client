@@ -5,12 +5,14 @@ module.exports = (method, url, data, headers, modify) ->
     request = new XMLHttpRequest
     request.open method, encodeURI url
 
+    request.withCredentials = true
+
     if headers?
       for header, value of headers
         request.setRequestHeader header, value
 
     if modify?
-      modify request
+      modifications = modify request
 
     request.onreadystatechange = (e) ->
       console.log 'Ready state:', (key for key, value of request when value is request.readyState and key isnt 'readyState')[0]

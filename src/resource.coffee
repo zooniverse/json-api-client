@@ -72,7 +72,6 @@ module.exports = class Resource extends Emitter
   # Turn a JSON-API "href" template into a usable URL.
   PLACEHOLDERS_PATTERN: /{(.+?)}/g
   applyHREF: (href, context) ->
-
     href.replace @PLACEHOLDERS_PATTERN, (_, path) ->
       segments = path.split '.'
       print.warn 'Segments', segments
@@ -99,10 +98,9 @@ module.exports = class Resource extends Emitter
   save: ->
     @emit 'will-save'
     save = if @id
-      url = @href || [@_type.getURL(), @id].join '/'
-      api.put url, this
+      @_type.apiClient.put @getURL(), this
     else
-      api.post @_type.getURL(), this
+      @_type.apiClient.post @_type.getURL(), this
 
     save.then (results) =>
       @update results
@@ -111,9 +109,9 @@ module.exports = class Resource extends Emitter
   delete: ->
     @emit 'will-delete'
     deletion = if @id
-      @_getURL().then (url) ->
-        api.delete url
+      @_type.apiClient.delete @getURL()
     else
+      # @_type.removeResource this
       Promise.resolve()
 
     deletion.then =>
@@ -130,6 +128,9 @@ module.exports = class Resource extends Emitter
   emit: (signal, payload) ->
     super
     @_type._handleResourceEmission this, arguments...
+
+  getURL: ->
+    @href || [@_type.getURL(), @id].join '/'
 
   toJSON: ->
     result = {}
