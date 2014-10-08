@@ -21,6 +21,6 @@ module.exports = (method, url, data, headers, modify) ->
         if 200 <= request.status < 300
           resolve request
         else if 400 <= request.status < 600
-          reject new Error request.responseText
+          reject request
 
     request.send JSON.stringify data
