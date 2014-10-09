@@ -20,7 +20,7 @@ module.exports = (method, url, data, headers, modify) ->
         console.log 'Done; status is', request.status
         if 200 <= request.status < 300
           resolve request
-        else if 400 <= request.status < 600
+        else # if 400 <= request.status < 600
           reject request
 
     request.send JSON.stringify data
