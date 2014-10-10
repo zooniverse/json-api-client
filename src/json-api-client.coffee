@@ -65,7 +65,7 @@ module.exports = class JSONAPIClient
           primaryResults.push @types[type].createResource resource, type
 
     print.info 'Primary resources:', primaryResults
-    primaryResults
+    Promise.all primaryResults
 
   handleLink: (typeName, attributeName, hrefTemplate, attributeTypeName) ->
     unless @types[typeName]?
