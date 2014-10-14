@@ -1,3 +1,5 @@
+print = require './print'
+
 module.exports = class Emitter
   _callbacks: null
 
@@ -29,7 +31,7 @@ module.exports = class Emitter
       @stopListening signal for signal of @_callbacks
 
   emit: (signal, payload...) ->
-    console?.log 'Emitting', signal, JSON.stringify(payload), @_callbacks[signal]?.length
+    print.log 'Emitting', signal, JSON.stringify(payload), @_callbacks[signal]?.length
     if signal of @_callbacks
       for callback in @_callbacks[signal]
         @_callHandler callback, payload

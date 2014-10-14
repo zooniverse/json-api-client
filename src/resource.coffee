@@ -15,15 +15,14 @@ module.exports = class Resource extends Emitter
   constructor: (config...) ->
     super
     mergeInto this, config... if config?
-    console?.log "Created resource: #{@_type.name} #{@id}", this
+    print.info "Created resource: #{@_type.name} #{@id}", this
     @emit 'create'
-    console.log 'Created!'
 
   # Get a promise for an attribute referring to (an)other resource(s).
   attr: (attribute) ->
     print.info 'Getting link:', attribute
     if attribute of this
-      console?.warn "No need to access a non-linked attribute via attr: #{attribute}", this
+      print.warn "No need to access a non-linked attribute via attr: #{attribute}", this
       Promise.resolve @[attribute]
     else if @links? and attribute of @links
       print.log 'Link of resource'
