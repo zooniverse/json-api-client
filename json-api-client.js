@@ -362,6 +362,10 @@ module.exports = Resource = (function(_super) {
 
   Resource.prototype._type = null;
 
+  Resource.prototype.created_at = '';
+
+  Resource.prototype.updated_at = '';
+
   function Resource() {
     var config;
     config = 1 <= arguments.length ? __slice.call(arguments, 0) : [];

@@ -9,6 +9,9 @@ module.exports = class Resource extends Emitter
 
   _type: null
 
+  created_at: ''
+  updated_at: ''
+
   constructor: (config...) ->
     super
     mergeInto this, config... if config?
