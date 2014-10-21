@@ -28,7 +28,8 @@ module.exports = class JSONAPIClient
       @request method.toUpperCase(), arguments...
 
   processResponseTo: (request) ->
-    response = JSON.parse request.responseText
+    response = try JSON.parse request.responseText
+    response ?= {}
     print.log 'Processing response', response
 
     if 'meta' of response
