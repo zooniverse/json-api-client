@@ -8,11 +8,13 @@ module.exports = class Resource extends Emitter
   type: ''
 
   _type: null
+  _changedKeys: null
 
   created_at: ''
   updated_at: ''
 
   constructor: (config...) ->
+    @_changedKeys = []
     super
     mergeInto this, config... if config?
     print.info "Created resource: #{@_type.name} #{@id}", this
@@ -93,20 +95,40 @@ module.exports = class Resource extends Emitter
 
       value
 
-  update: (changes...) ->
-    mergeInto this, changes...
-    @emit 'change'
+  update: (changeSet = {}) ->
+    @emit 'will-change'
+    actualChanges = 0
+
+    for key, value of changeSet when @[key] isnt value
+      @[key] = value
+      unless key in @_changedKeys
+        @_changedKeys.push key
+      actualChanges += 1
+
+    unless actualChanges is 0
+      @emit 'change'
 
   save: ->
     @emit 'will-save'
+
+    payload = {}
+    payload[@_type.name] = @getChangesSinceSave()
+
     save = if @id
-      @_type.apiClient.put @getURL(), this
+      @_type.apiClient.put @getURL(), payload
     else
-      @_type.apiClient.post @_type.getURL(), this
+      @_type.apiClient.post @_type.getURL(), payload
 
     save.then (results) =>
       @update results
+      @_changedKeys.splice 0
       @emit 'save'
+
+  getChangesSinceSave: ->
+    changes = {}
+    for key in @_changedKeys
+      changes[key] = @[key]
+    changes
 
   delete: ->
     @emit 'will-delete'

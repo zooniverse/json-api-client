@@ -86,7 +86,9 @@ module.exports = class Type extends Emitter
   createResource: (data) ->
     if @waitingFor data.id
       print.log 'Resolving and removing deferral for', @name, data.id
-      @deferrals[data.id].resolve new Resource data, _type: this
+      newResource = new Resource _type: this
+      newResource.update data
+      @deferrals[data.id].resolve newResource
       @deferrals[data.id] = null
     else if @has data.id
       print.log 'The', @name, 'resource', data.id, 'exists; will update'
