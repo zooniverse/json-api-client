@@ -123,6 +123,7 @@ module.exports = class Resource extends Emitter
       @update results
       @_changedKeys.splice 0
       @emit 'save'
+      results
 
   getChangesSinceSave: ->
     changes = {}
