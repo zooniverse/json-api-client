@@ -21,7 +21,9 @@ module.exports = class JSONAPIClient
   request: (method, url, data, additionalHeaders) ->
     print.info 'Making a', method, 'request to', url
     headers = mergeInto {}, DEFAULT_TYPE_AND_ACCEPT, @headers, additionalHeaders
-    makeHTTPRequest(method, @root + url, data, headers).then @processResponseTo.bind this
+    makeHTTPRequest method, @root + url, data, headers
+      .then @processResponseTo.bind this
+      .catch @processErrorResponseTo.bind this
 
   for method in ['get', 'post', 'put', 'delete'] then do (method) =>
     @::[method] = ->
@@ -80,5 +82,8 @@ module.exports = class JSONAPIClient
 
   createType: (name) ->
     new Type name: name, apiClient: this
+
+  processErrorResponseTo: (request) ->
+    Promise.reject JSON.parse request.responseText
 
 module.exports.util = {makeHTTPRequest}
