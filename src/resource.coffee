@@ -145,10 +145,6 @@ module.exports = class Resource extends Emitter
         break
     matches
 
-  emit: (signal, payload) ->
-    super
-    @_type._handleResourceEmission this, arguments...
-
   getURL: ->
     @href || [@_type.getURL(), @id].join '/'
 

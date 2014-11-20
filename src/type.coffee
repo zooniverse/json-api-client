@@ -106,6 +106,3 @@ module.exports = class Type extends Emitter
     resource = new Resource _type: this
     resource.update data
     resource
-
-  _handleResourceEmission: (resource, signal, payload) ->
-    @emit 'change'
