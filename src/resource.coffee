@@ -3,22 +3,18 @@ Emitter = require './emitter'
 mergeInto = require './merge-into'
 
 module.exports = class Resource extends Emitter
-  id: ''
-  href: ''
-  type: ''
+  _type: null # The resource type object
 
-  _type: null
-  _changedKeys: null
+  _readOnlyKeys: ['id', 'type', 'href', 'created_at', 'updated_at']
 
-  created_at: ''
-  updated_at: ''
+  _changedKeys: null # Dirty keys
 
   constructor: (config...) ->
-    @_changedKeys = []
     super
+    @_changedKeys = []
     mergeInto this, config... if config?
-    print.info "Created resource: #{@_type.name} #{@id}", this
     @emit 'create'
+    print.info "Constructed a resource: #{@_type.name} #{@id}", this
 
   # Get a promise for an attribute referring to (an)other resource(s).
   attr: (attribute) ->
@@ -136,7 +132,6 @@ module.exports = class Resource extends Emitter
     deletion = if @id
       @_type.apiClient.delete @getURL()
     else
-      # @_type.removeResource this
       Promise.resolve()
 
     deletion.then =>
@@ -160,6 +155,6 @@ module.exports = class Resource extends Emitter
   toJSON: ->
     result = {}
     result[@_type.name] = {}
-    for own key, value of this when key.charAt(0) isnt '_'
+    for own key, value of this when key.charAt(0) isnt '_' and key not in @_readOnlyKeys
       result[@_type.name][key] = value
     result

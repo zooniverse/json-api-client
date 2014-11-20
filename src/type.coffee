@@ -14,19 +14,17 @@ module.exports = class Type extends Emitter
   name: ''
   apiClient: null
 
-  links: null
+  links: null # Resource link definitions
 
-  deferrals: null
-  resourcePromises: null
+  deferrals: null # Keys are IDs of specifically requested resources.
+  resourcePromises: null # Keys are IDs, values are promises resolving to resources.
 
-  constructor: (configs...) ->
+  constructor: (@name, @apiClient) ->
     super
-    mergeInto this, configs... if configs?
-    print.info 'Defining a new resource type:', @name
-    @links ?= {}
-    @deferrals ?= {}
-    @resourcePromises ?= {}
-    @apiClient.types[@name] = this
+    @links = {}
+    @deferrals = {}
+    @resourcePromises = {}
+    print.info 'Defined a new type:', @name
 
   getURL: ->
     '/' + @name
@@ -83,28 +81,31 @@ module.exports = class Type extends Emitter
         @apiClient.get(@getURL(), mergeInto params, query).then (resources) =>
           Promise.all existing.concat resources
 
-  createResource: (data) ->
-    if data.id
-      if @waitingFor data.id
-        print.log 'Resolving and removing deferral for', @name, data.id
-        newResource = new Resource _type: this
-        newResource.update data
-        @deferrals[data.id].resolve newResource
-        @deferrals[data.id] = null
-      else if @has data.id
-        print.log 'The', @name, 'resource', data.id, 'exists; will update'
-        @get(data.id).then (resource) ->
-          resource.update data
-      else
-        print.log 'Creating new', @name, 'resource', data.id
-        @resourcePromises[data.id] = Promise.resolve new Resource data, _type: this
+  addExistingResource: (data) ->
+    if @waitingFor data.id
+      print.log 'Done waiting for', @name, 'resource', data.id
+      newResource = new Resource _type: this, data
+      deferral = @deferrals[data.id]
+      @deferrals[data.id] = null
+      deferral.resolve newResource
 
-      @resourcePromises[data.id]
+    else if @has data.id
+      print.log 'The', @name, 'resource', data.id, 'already exists; will update'
+      @get(data.id).then (resource) ->
+        resource.update data
 
     else
-      resource = new Resource _type: this
-      resource.update data
-      resource
+      print.log 'Accepting', @name, 'resource', data.id
+      newResource = new Resource _type: this, data
+      @resourcePromises[data.id] = Promise.resolve newResource
+
+    @resourcePromises[data.id]
+
+  createResource: (data) ->
+    print.log 'Creating a new', @name, 'resource'
+    resource = new Resource _type: this
+    resource.update data
+    resource
 
   _handleResourceEmission: (resource, signal, payload) ->
     @emit 'change'

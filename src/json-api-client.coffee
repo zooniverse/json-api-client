@@ -8,13 +8,12 @@ DEFAULT_TYPE_AND_ACCEPT =
   'Accept': "application/vnd.api+json"
 
 module.exports = class JSONAPIClient
-  root: ''
+  root: '/'
   headers: null
 
-  types: null
+  types: null # Types that have been defined
 
-  constructor: (@root, @headers) ->
-    @headers ?= {}
+  constructor: (@root, @headers = {}) ->
     @types = {}
     print.info 'Created a new JSON-API client at', @root
 
@@ -50,22 +49,22 @@ module.exports = class JSONAPIClient
     if 'linked' of response
       for type, resources of response.linked
         print.log 'Got', resources ? 1, 'linked', type, 'resources.'
-        @createType type unless @types[type]?
+        @createType type
         for resource in [].concat resources
-          @types[type].createResource resource
+          @types[type].addExistingResource resource
 
     if 'data' of response
       print.log 'Got a top-level "data" collection of', response.data.length ? 1
       primaryResults = for resource in [].concat response.data
-        @createType response.type unless @types[resource.type]?
-        @types[type].createResource resource
+        @createType response.type
+        @types[response.type].addExistingResource resource
     else
       primaryResults = []
       for type, resources of response when type not in ['links', 'linked', 'meta', 'data']
         print.log 'Got a top-level', type, 'collection of', resources.length ? 1
-        @createType type unless @types[type]?
+        @createType type
         for resource in [].concat resources
-          primaryResults.push @types[type].createResource resource, type
+          primaryResults.push @types[type].addExistingResource resource
 
     print.info 'Primary resources:', primaryResults
     Promise.all primaryResults
@@ -81,7 +80,8 @@ module.exports = class JSONAPIClient
       @types[typeName].links[attributeTypeName].type = attributeName
 
   createType: (name) ->
-    new Type name: name, apiClient: this
+    @types[name] ?= new Type name, this
+    @types[name]
 
   processErrorResponseTo: (request) ->
     Promise.reject JSON.parse request.responseText
