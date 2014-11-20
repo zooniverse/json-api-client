@@ -45,7 +45,7 @@ module.exports = class Resource extends Emitter
       if href?
         context = {}
         context[@_type.name] = this
-        href = applyHREF href, context
+        href = @applyHREF href, context
         @_type.apiClient.get href
 
       else if type?
