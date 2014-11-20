@@ -115,11 +115,11 @@ module.exports = class Resource extends Emitter
     else
       @_type.apiClient.post @_type.getURL(), payload
 
-    save.then (results) =>
-      @update results
+    save.then ([result]) =>
+      @update result
       @_changedKeys.splice 0
       @emit 'save'
-      results
+      result
 
   getChangesSinceSave: ->
     changes = {}
