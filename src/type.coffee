@@ -84,21 +84,27 @@ module.exports = class Type extends Emitter
           Promise.all existing.concat resources
 
   createResource: (data) ->
-    if @waitingFor data.id
-      print.log 'Resolving and removing deferral for', @name, data.id
-      newResource = new Resource _type: this
-      newResource.update data
-      @deferrals[data.id].resolve newResource
-      @deferrals[data.id] = null
-    else if @has data.id
-      print.log 'The', @name, 'resource', data.id, 'exists; will update'
-      @get(data.id).then (resource) ->
-        resource.update data
-    else
-      print.log 'Creating new', @name, 'resource', data.id
-      @resourcePromises[data.id] = Promise.resolve new Resource data, _type: this
+    if data.id
+      if @waitingFor data.id
+        print.log 'Resolving and removing deferral for', @name, data.id
+        newResource = new Resource _type: this
+        newResource.update data
+        @deferrals[data.id].resolve newResource
+        @deferrals[data.id] = null
+      else if @has data.id
+        print.log 'The', @name, 'resource', data.id, 'exists; will update'
+        @get(data.id).then (resource) ->
+          resource.update data
+      else
+        print.log 'Creating new', @name, 'resource', data.id
+        @resourcePromises[data.id] = Promise.resolve new Resource data, _type: this
 
-    @resourcePromises[data.id]
+      @resourcePromises[data.id]
+
+    else
+      resource = new Resource _type: this
+      resource.update data
+      resource
 
   _handleResourceEmission: (resource, signal, payload) ->
     @emit 'change'

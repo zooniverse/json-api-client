@@ -160,6 +160,6 @@ module.exports = class Resource extends Emitter
   toJSON: ->
     result = {}
     result[@_type.name] = {}
-    for key, value of this when key.charAt(0) isnt '_' and key not of @constructor.prototype
+    for own key, value of this when key.charAt(0) isnt '_'
       result[@_type.name][key] = value
     result
