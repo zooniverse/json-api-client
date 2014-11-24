@@ -14,6 +14,7 @@ module.exports = class Resource extends Emitter
     @_changedKeys = []
     mergeInto this, config... if config?
     @emit 'create'
+    @_type.emit 'change'
     print.info "Constructed a resource: #{@_type.name} #{@id}", this
 
   # Get a promise for an attribute referring to (an)other resource(s).
@@ -103,6 +104,7 @@ module.exports = class Resource extends Emitter
 
     unless actualChanges is 0
       @emit 'change'
+      @_type.emit 'change'
 
   save: ->
     @emit 'will-save'
@@ -130,7 +132,8 @@ module.exports = class Resource extends Emitter
   delete: ->
     @emit 'will-delete'
     deletion = if @id
-      @_type.apiClient.delete @getURL()
+      @_type.apiClient.delete(@getURL()).then =>
+        @_type.emit 'change'
     else
       Promise.resolve()
 
