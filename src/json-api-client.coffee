@@ -18,24 +18,23 @@ module.exports = class JSONAPIClient
     @types = {}
     print.info 'Created a new JSON-API client at', @root
 
-  request: (method, url, data, additionalHeaders) ->
+  request: (method, url, data, additionalHeaders, callback) ->
     print.info 'Making a', method, 'request to', url
     headers = mergeInto {}, DEFAULT_TYPE_AND_ACCEPT, @headers, additionalHeaders
     makeHTTPRequest method, @root + url, data, headers
-      .then @processResponseTo.bind this
-      .catch @processErrorResponseTo.bind this
+      .then =>
+        @processResponseTo request, callback
+      .catch =>
+        @processErrorResponseTo request
 
   for method in ['get', 'post', 'put', 'delete'] then do (method) =>
     @::[method] = ->
       @request method.toUpperCase(), arguments...
 
-  processResponseTo: (request) ->
+  processResponseTo: (request, callback) ->
     response = try JSON.parse request.responseText
     response ?= {}
     print.log 'Processing response', response
-
-    if 'meta' of response
-      'TODO: No idea yet!'
 
     if 'links' of response
       for typeAndAttribute, link of response.links
@@ -68,6 +67,7 @@ module.exports = class JSONAPIClient
           primaryResults.push @types[type].addExistingResource resource
 
     print.info 'Primary resources:', primaryResults
+    callback? request, response
     Promise.all primaryResults
 
   handleLink: (typeName, attributeName, hrefTemplate, attributeTypeName) ->
