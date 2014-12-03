@@ -2,6 +2,7 @@ print = require './print'
 makeHTTPRequest = require './make-http-request'
 mergeInto = require './merge-into'
 Type = require './type'
+Resource = require './resource'
 
 DEFAULT_TYPE_AND_ACCEPT =
   'Content-Type': 'application/vnd.api+json'
@@ -90,3 +91,5 @@ module.exports = class JSONAPIClient
       new Error request.responseText || request.status
 
 module.exports.util = {makeHTTPRequest}
+module.exports.Type = Type
+module.exports.Resource = Resource
