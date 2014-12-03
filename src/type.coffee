@@ -30,8 +30,9 @@ module.exports = class Type extends Emitter
     '/' + @name
 
   queryLocal: (query) ->
-    Promise.all(resourcePromise for id, resourcePromise of @resourcePromises).then (resources) ->
-      resource for resource in resources when resource?.matchesQuery query
+    existLocally = (promise for id, promise of @resourcePromises when not @waitingFor id)
+    Promise.all(existLocally).then (resources) ->
+      resource for resource in resources when resource.matchesQuery query
 
   waitingFor: (id) ->
     @deferrals[id]?
@@ -68,13 +69,17 @@ module.exports = class Type extends Emitter
 
     Promise.all (@resourcePromises[id] for id in ids)
 
-  getByQuery: (query, limit = Infinity) ->
+  getByQuery: (query, limit = Infinity, callback) ->
     @queryLocal(query).then (existing) =>
       if existing.length >= limit
         existing
       else
-        params = limit: limit - existing.length
-        @apiClient.get(@getURL(), mergeInto params, query).then (resources) =>
+        params = {}
+        if isFinite limit
+          params.limit = limit - existing.length
+        mergeInto params, query
+
+        @apiClient.get(@getURL(), params).then (resources) ->
           Promise.all existing.concat resources
 
   addExistingResource: (data) ->
