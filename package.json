@@ -7,13 +7,11 @@
     "coffeeify": "^0.7.0",
     "derequire": "^1.2.0",
     "node-static": "^0.7.6",
+    "onchange": "0.0.2",
     "watch": "^0.13.0"
   },
   "scripts": {
-    "start": "npm run watch & npm run serve",
-    "watch": "watch \"npm run build && npm run build-demo\" ./src",
-    "serve": "static --port 1502 --headers '{\"Cache-Control\": \"no-cache, must-revalidate\"}'",
-    "build": "browserify --debug --entry ./src/json-api-client.coffee --extension .coffee --transform coffeeify --standalone JSONAPIClient | derequire > ./json-api-client.js",
-    "build-demo": "browserify --debug --entry ./demo.coffee --extension .coffee --transform coffeeify > ./demo.js"
+    "start": "onchange ./src/* -- npm run build",
+    "build": "browserify --debug --entry ./src/json-api-client.coffee --extension .coffee --transform coffeeify --standalone JSONAPIClient | derequire > ./json-api-client.js"
   }
 }
