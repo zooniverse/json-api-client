@@ -40,21 +40,21 @@ module.exports = class Type extends Emitter
     @resourcePromises[id]? and not @deferrals[id]?
 
   get: ->
-    if typeof arguments[0] is 'string' or Array.isArray arguments[0]
+    if typeof arguments[0] is 'string'
+      @getByID arguments...
+    else if Array.isArray arguments[0]
       @getByIDs arguments...
     else
       @getByQuery arguments...
 
-  # Given a string, return a promise for that resource.
-  # Given an array, return an array of promises for those resources.
-  getByIDs: (ids, options) ->
-    print.info 'Getting', @name, 'by ID(s)', ids
-    if typeof ids is 'string'
-      givenString = true
-      ids = [ids]
+  getByID: (id, otherArgs...) ->
+    @getByIDs([id], otherArgs...).then ([resource]) ->
+      resource
 
-    # Only request things we don't have or don't already have a request out for.
-    incoming = (id for id in ids when not @has(id) and not @waitingFor(id))
+  getByIDs: (ids, options, callback) ->
+    print.info 'Getting', @name, 'by ID(s)', ids
+    # Only request things we don't already have a request out for.
+    incoming = (id for id in ids when not @waitingFor id)
     print.log 'Incoming: ', incoming
 
     unless incoming.length is 0
@@ -64,13 +64,9 @@ module.exports = class Type extends Emitter
 
       url = [@getURL(), incoming.join ','].join '/'
       print.log 'Request for', @name, 'at', url
-      @apiClient.get(url, options).then (resources) =>
-        print.log 'Got', @name, resources
+      @apiClient.get url, options, null, callback
 
-    if givenString
-      @resourcePromises[ids[0]]
-    else
-      Promise.all (@resourcePromises[id] for id in ids)
+    Promise.all (@resourcePromises[id] for id in ids)
 
   getByQuery: (query, limit = Infinity) ->
     @queryLocal(query).then (existing) =>
