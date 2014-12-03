@@ -84,6 +84,9 @@ module.exports = class JSONAPIClient
     @types[name]
 
   processErrorResponseTo: (request) ->
-    Promise.reject JSON.parse request.responseText
+    Promise.reject try
+      JSON.parse request.responseText
+    catch
+      new Error request.responseText || request.status
 
 module.exports.util = {makeHTTPRequest}
