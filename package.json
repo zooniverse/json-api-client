@@ -6,9 +6,7 @@
     "browserify": "^5.12.1",
     "coffeeify": "^0.7.0",
     "derequire": "^1.2.0",
-    "node-static": "^0.7.6",
-    "onchange": "0.0.2",
-    "watch": "^0.13.0"
+    "onchange": "0.0.2"
   },
   "scripts": {
     "start": "onchange ./src/* -- npm run build",
