@@ -26,4 +26,7 @@ module.exports = (method, url, data, headers, modify) ->
         else # if 400 <= request.status < 600
           reject request
 
-    request.send JSON.stringify data
+    if data instanceof Blob
+      request.send data
+    else
+      request.send JSON.stringify data
