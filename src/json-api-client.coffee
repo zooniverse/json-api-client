@@ -22,9 +22,9 @@ module.exports = class JSONAPIClient
     print.info 'Making a', method, 'request to', url
     headers = mergeInto {}, DEFAULT_TYPE_AND_ACCEPT, @headers, additionalHeaders
     makeHTTPRequest method, @root + url, data, headers
-      .then =>
+      .then (request) =>
         @processResponseTo request, callback
-      .catch =>
+      .catch (request) =>
         @processErrorResponseTo request
 
   for method in ['get', 'post', 'put', 'delete'] then do (method) =>
