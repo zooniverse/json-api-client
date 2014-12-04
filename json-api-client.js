@@ -234,16 +234,16 @@ module.exports = JSONAPIClient = (function() {
   };
 
   JSONAPIClient.prototype.handleLink = function(typeName, attributeName, hrefTemplate, attributeTypeName) {
-    var _base;
-    this.createType(typeName);
-    if ((_base = this.types[typeName].links)[attributeTypeName] == null) {
-      _base[attributeTypeName] = {};
+    var type, _base;
+    type = this.createType(typeName);
+    if ((_base = type.links)[attributeName] == null) {
+      _base[attributeName] = {};
     }
     if (hrefTemplate != null) {
-      this.types[typeName].links[attributeTypeName].href = hrefTemplate;
+      type.links[attributeName].href = hrefTemplate;
     }
     if (attributeTypeName != null) {
-      return this.types[typeName].links[attributeTypeName].type = attributeName;
+      return type.links[attributeName].type = attributeTypeName;
     }
   };
 

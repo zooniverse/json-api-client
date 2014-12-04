@@ -71,14 +71,13 @@ module.exports = class JSONAPIClient
     Promise.all primaryResults
 
   handleLink: (typeName, attributeName, hrefTemplate, attributeTypeName) ->
-    unless @types[typeName]?
-      @createType typeName
+    type = @createType typeName
 
-    @types[typeName].links[attributeTypeName] ?= {}
+    type.links[attributeName] ?= {}
     if hrefTemplate?
-      @types[typeName].links[attributeTypeName].href = hrefTemplate
+      type.links[attributeName].href = hrefTemplate
     if attributeTypeName?
-      @types[typeName].links[attributeTypeName].type = attributeName
+      type.links[attributeName].type = attributeTypeName
 
   createType: (name) ->
     @types[name] ?= new Type name, this
