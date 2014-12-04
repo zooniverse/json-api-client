@@ -42,8 +42,12 @@ module.exports = class Resource extends Emitter
       if href?
         context = {}
         context[@_type.name] = this
-        href = @applyHREF href, context
-        @_type.apiClient.get href
+        appliedHREF = @applyHREF href, context
+        @_type.apiClient.get(appliedHREF).then (resources) =>
+          if typeof @links?[name] is 'string'
+            resources[0]
+          else
+            resources
 
       else if type?
         type = @_type.apiClient.types[type]
@@ -58,8 +62,12 @@ module.exports = class Resource extends Emitter
         context = {}
         context[@_type.name] = this
         print.warn 'HREF', href
-        href = @applyHREF href, context
-        @_type.apiClient.get href
+        appliedHREF = @applyHREF href, context
+        @_type.apiClient.get(appliedHREF).then (resources) =>
+          if typeof @links?[name] is 'string'
+            resources[0]
+          else
+            resources
 
       else if type? and ids?
         type = @_type.apiClient.types[type]
