@@ -54,8 +54,8 @@ module.exports = class Type extends Emitter
 
   getByIDs: (ids, options, callback) ->
     print.info 'Getting', @name, 'by ID(s)', ids
-    # Only request things we don't already have a request out for.
-    incoming = (id for id in ids when not @waitingFor id)
+    # Only request things we don't already have.
+    incoming = (id for id in ids when not @has id)
     print.log 'Incoming: ', incoming
 
     unless incoming.length is 0
@@ -74,13 +74,15 @@ module.exports = class Type extends Emitter
       if existing.length >= limit
         existing
       else
+        existingIDs = (id for {id} in existing)
         params = {}
         if isFinite limit
           params.limit = limit - existing.length
         mergeInto params, query
 
-        @apiClient.get(@getURL(), params).then (resources) ->
-          Promise.all existing.concat resources
+        @apiClient.get(@getURL(), params, null, callback).then (resources) ->
+          fetched = (resource for resource in resources when resource.id not in existingIDs)
+          Promise.all existing.concat fetched
 
   addExistingResource: (data) ->
     if @waitingFor data.id
