@@ -5,6 +5,10 @@ print = require './print'
 module.exports = (method, url, data, headers, modify) ->
   print.info 'Requesting', method, url, data
   new Promise (resolve, reject) ->
+    if data? and method is 'GET'
+      url += '?' + ([key, value].join '=' for key, value of data).join '&'
+      data = null
+
     request = new XMLHttpRequest
     request.open method, encodeURI url
 
