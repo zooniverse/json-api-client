@@ -1,8 +1,15 @@
-LOG_LEVEL = parseFloat location.search.match(/json-api-log=(\d+)/)?[1] ? 0
-
 print = (level, color, messages...) ->
-  if LOG_LEVEL >= level
-    console.log '%c{json:api}', "color: #{color}; font: bold 1em monospace;", messages...
+  # Set the log level with a global variable or a query param in the page's URL.
+  setting = JSON_API_LOG_LEVEL ? parseFloat location?.search.match(/json-api-log=(\d+)/)?[1] ? 0
+
+  if setting >= level
+    # We can style text in the browser console, but not as easily in Node.
+    prefix = if location?
+      ['%c{json:api}', "color: #{color}; font: bold 1em monospace;"]
+    else
+      ['{json:api}']
+
+    console?.log prefix..., messages...
 
 module.exports =
   log: print.bind null, 4, 'gray'
