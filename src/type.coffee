@@ -54,18 +54,13 @@ module.exports = class Type extends Emitter
 
   getByIDs: (ids, options, callback) ->
     print.info 'Getting', @name, 'by ID(s)', ids
-    # Only request things we don't already have.
-    incoming = (id for id in ids when not @has id)
-    print.log 'Incoming: ', incoming
+    for id in ids
+      @deferrals[id] = defer()
+      @resourcePromises[id] = @deferrals[id].promise
 
-    unless incoming.length is 0
-      for id in incoming
-        @deferrals[id] = defer()
-        @resourcePromises[id] = @deferrals[id].promise
-
-      url = [@getURL(), incoming.join ','].join '/'
-      print.log 'Request for', @name, 'at', url
-      @apiClient.get url, options, null, callback
+    url = [@getURL(), ids.join ','].join '/'
+    print.log 'Request for', @name, 'at', url
+    @apiClient.get url, options, null, callback
 
     Promise.all (@resourcePromises[id] for id in ids)
 

@@ -131,6 +131,12 @@ module.exports = class Resource extends Emitter
       @emit 'save'
       result
 
+  refresh: ->
+    if @id
+      @_type.get @id
+    else
+      Promise.reject new Error 'Can\'t refresh a resource with no ID'
+
   getChangesSinceSave: ->
     changes = {}
     for key in @_changedKeys
