@@ -75,11 +75,11 @@ module.exports = class JSONAPIClient
   _handleLink: (typeName, attributeName, hrefTemplate, attributeTypeName) ->
     type = @type typeName
 
-    type.links[attributeName] ?= {}
+    type._links[attributeName] ?= {}
     if hrefTemplate?
-      type.links[attributeName].href = hrefTemplate
+      type._links[attributeName].href = hrefTemplate
     if attributeTypeName?
-      type.links[attributeName].type = attributeTypeName
+      type._links[attributeName].type = attributeTypeName
 
   type: (name) ->
     @_types[name] ?= new Type name, this

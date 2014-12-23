@@ -15,7 +15,7 @@ module.exports = class Resource extends Emitter
     mergeInto this, config...
     @emit 'create'
     @_type.emit 'change'
-    print.info "Constructed a resource: #{@_type.name} #{@id}", this
+    print.info "Constructed a resource: #{@_type._name} #{@id}", this
 
   # Get a promise for an attribute referring to (an)other resource(s).
   link: (attribute) ->
@@ -26,12 +26,12 @@ module.exports = class Resource extends Emitter
     else if @links? and attribute of @links
       print.log 'Link of resource'
       @_getLink attribute, @links[attribute]
-    else if attribute of @_type.links
+    else if attribute of @_type._links
       print.log 'Link of type'
-      @_getLink attribute, @_type.links[attribute]
+      @_getLink attribute, @_type._links[attribute]
     else
       print.error 'Not a link at all'
-      Promise.reject new Error "No attribute #{attribute} of #{@_type.name} resource"
+      Promise.reject new Error "No attribute #{attribute} of #{@_type._name} resource"
 
   attr: ->
     console.warn 'Use Resource::link, not ::attr', arguments...
@@ -41,20 +41,20 @@ module.exports = class Resource extends Emitter
     if typeof link is 'string' or Array.isArray link
       print.log 'Linked by ID(s)'
       ids = link
-      {href, type} = @_type.links[name]
+      {href, type} = @_type._links[name]
 
       if href?
         context = {}
-        context[@_type.name] = this
+        context[@_type._name] = this
         appliedHREF = @applyHREF href, context
-        @_type.apiClient.get(appliedHREF).then (resources) =>
+        @_type._apiClient.get(appliedHREF).then (resources) =>
           if typeof @links?[name] is 'string'
             resources[0]
           else
             resources
 
       else if type?
-        type = @_type.apiClient._types[type]
+        type = @_type._apiClient._types[type]
         type.get ids
 
     else if link?
@@ -64,17 +64,17 @@ module.exports = class Resource extends Emitter
 
       if href?
         context = {}
-        context[@_type.name] = this
+        context[@_type._name] = this
         print.warn 'HREF', href
         appliedHREF = @applyHREF href, context
-        @_type.apiClient.get(appliedHREF).then (resources) =>
+        @_type._apiClient.get(appliedHREF).then (resources) =>
           if typeof @links?[name] is 'string'
             resources[0]
           else
             resources
 
       else if type? and ids?
-        type = @_type.apiClient._types[type]
+        type = @_type._apiClient._types[type]
         type.get ids
 
     else
@@ -122,12 +122,12 @@ module.exports = class Resource extends Emitter
     @emit 'will-save'
 
     payload = {}
-    payload[@_type.name] = @getChangesSinceSave()
+    payload[@_type._name] = @getChangesSinceSave()
 
     save = if @id
-      @_type.apiClient.put @getURL(), payload
+      @_type._apiClient.put @getURL(), payload
     else
-      @_type.apiClient.post @_type.getURL(), payload
+      @_type._apiClient.post @_type._getURL(), payload
 
     save.then ([result]) =>
       @update result
@@ -150,7 +150,7 @@ module.exports = class Resource extends Emitter
   delete: ->
     @emit 'will-delete'
     deletion = if @id
-      @_type.apiClient.delete(@getURL()).then =>
+      @_type._apiClient.delete(@getURL()).then =>
         @_type.emit 'change'
     else
       Promise.resolve()
@@ -167,11 +167,11 @@ module.exports = class Resource extends Emitter
     matches
 
   getURL: ->
-    @href || [@_type.getURL(), @id].join '/'
+    @href || @_type._getURL @id
 
   toJSON: ->
     result = {}
-    result[@_type.name] = {}
+    result[@_type._name] = {}
     for own key, value of this when key.charAt(0) isnt '_' and key not in @_readOnlyKeys
-      result[@_type.name][key] = value
+      result[@_type._name][key] = value
     result

@@ -11,34 +11,34 @@ defer = ->
   deferral
 
 module.exports = class Type extends Emitter
-  name: ''
-  apiClient: null
+  _name: ''
+  _apiClient: null
 
-  links: null # Resource link definitions
+  _links: null # Resource link definitions
 
-  deferrals: null # Keys are IDs of specifically requested resources.
-  resourcePromises: null # Keys are IDs, values are promises resolving to resources.
+  _deferrals: null # Keys are IDs of specifically requested resources.
+  _resourcePromises: null # Keys are IDs, values are promises resolving to resources.
 
-  constructor: (@name, @apiClient) ->
+  constructor: (@_name, @_apiClient) ->
     super
-    @links = {}
-    @deferrals = {}
-    @resourcePromises = {}
-    print.info 'Defined a new type:', @name
+    @_links = {}
+    @_deferrals = {}
+    @_resourcePromises = {}
+    print.info 'Defined a new type:', @_name
 
-  getURL: ->
-    '/' + @name
+  _getURL: ->
+    [null, @_name, arguments...].join '/'
 
   queryLocal: (query) ->
-    existLocally = (promise for id, promise of @resourcePromises when not @waitingFor id)
+    existLocally = (promise for id, promise of @_resourcePromises when not @waitingFor id)
     Promise.all(existLocally).then (resources) ->
       resource for resource in resources when resource.matchesQuery query
 
   waitingFor: (id) ->
-    @deferrals[id]?
+    @_deferrals[id]?
 
   has: (id) ->
-    @resourcePromises[id]? and not @deferrals[id]?
+    @_resourcePromises[id]? and not @_deferrals[id]?
 
   get: ->
     if typeof arguments[0] is 'string'
@@ -53,16 +53,16 @@ module.exports = class Type extends Emitter
       resource
 
   getByIDs: (ids, options, callback) ->
-    print.info 'Getting', @name, 'by ID(s)', ids
+    print.info 'Getting', @_name, 'by ID(s)', ids
     for id in ids
-      @deferrals[id] = defer()
-      @resourcePromises[id] = @deferrals[id].promise
+      @_deferrals[id] = defer()
+      @_resourcePromises[id] = @_deferrals[id].promise
 
-    url = [@getURL(), ids.join ','].join '/'
-    print.log 'Request for', @name, 'at', url
-    @apiClient.get url, options, null, callback
+    url = [@_getURL(), ids.join ','].join '/'
+    print.log 'Request for', @_name, 'at', url
+    @_apiClient.get url, options, null, callback
 
-    Promise.all (@resourcePromises[id] for id in ids)
+    Promise.all (@_resourcePromises[id] for id in ids)
 
   getByQuery: (query, limit = Infinity, callback) ->
     @queryLocal(query).then (existing) =>
@@ -75,32 +75,32 @@ module.exports = class Type extends Emitter
           params.limit = limit - existing.length
         mergeInto params, query
 
-        @apiClient.get(@getURL(), params, null, callback).then (resources) ->
+        @_apiClient.get(@_getURL(), params, null, callback).then (resources) ->
           fetched = (resource for resource in resources when resource.id not in existingIDs)
           Promise.all existing.concat fetched
 
   addExistingResource: (data) ->
     if @waitingFor data.id
-      print.log 'Done waiting for', @name, 'resource', data.id
+      print.log 'Done waiting for', @_name, 'resource', data.id
       newResource = new Resource _type: this, data
-      deferral = @deferrals[data.id]
-      @deferrals[data.id] = null
+      deferral = @_deferrals[data.id]
+      @_deferrals[data.id] = null
       deferral.resolve newResource
 
     else if @has data.id
-      print.log 'The', @name, 'resource', data.id, 'already exists; will update'
+      print.log 'The', @_name, 'resource', data.id, 'already exists; will update'
       @get(data.id).then (resource) ->
         resource.update data
 
     else
-      print.log 'Accepting', @name, 'resource', data.id
+      print.log 'Accepting', @_name, 'resource', data.id
       newResource = new Resource _type: this, data
-      @resourcePromises[data.id] = Promise.resolve newResource
+      @_resourcePromises[data.id] = Promise.resolve newResource
 
-    @resourcePromises[data.id]
+    @_resourcePromises[data.id]
 
   create: (data) ->
-    print.log 'Creating a new', @name, 'resource'
+    print.log 'Creating a new', @_name, 'resource'
     resource = new Resource _type: this
     resource.update data
     resource
