@@ -19,7 +19,6 @@ module.exports = class JSONAPIClient
     print.info 'Created a new JSON-API client at', @root
 
   request: (method, url, data, additionalHeaders, callback) ->
-    print.info 'Making a', method, 'request to', url
     headers = mergeInto {}, DEFAULT_TYPE_AND_ACCEPT, @headers, additionalHeaders
     makeHTTPRequest method, @root + url, data, headers
       .then (request) =>
@@ -49,29 +48,26 @@ module.exports = class JSONAPIClient
     if 'linked' of response
       for type, resources of response.linked
         print.log 'Got', resources ? 1, 'linked', type, 'resources.'
-        @createType type
         for resource in [].concat resources
-          @_types[type].addExistingResource resource
+          @type(type).addExistingResource resource
 
     if 'data' of response
       print.log 'Got a top-level "data" collection of', response.data.length ? 1
       primaryResults = for resource in [].concat response.data
-        @createType response.type
-        @_types[response.type].addExistingResource resource
+        @type(response.type).addExistingResource resource
     else
       primaryResults = []
       for type, resources of response when type not in ['links', 'linked', 'meta', 'data']
         print.log 'Got a top-level', type, 'collection of', resources.length ? 1
-        @createType type
         for resource in [].concat resources
-          primaryResults.push @_types[type].addExistingResource resource
+          primaryResults.push @type(type).addExistingResource resource
 
     print.info 'Primary resources:', primaryResults
     callback? request, response
     Promise.all primaryResults
 
   handleLink: (typeName, attributeName, hrefTemplate, attributeTypeName) ->
-    type = @createType typeName
+    type = @type typeName
 
     type.links[attributeName] ?= {}
     if hrefTemplate?
@@ -79,9 +75,13 @@ module.exports = class JSONAPIClient
     if attributeTypeName?
       type.links[attributeName].type = attributeTypeName
 
-  createType: (name) ->
+  type: (name) ->
     @_types[name] ?= new Type name, this
     @_types[name]
+
+  createType: ->
+    console.warn 'Use JSONAPIClient::type, not ::createType', arguments...
+    @type arguments...
 
   processErrorResponseTo: (request) ->
     Promise.reject try

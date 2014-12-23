@@ -99,8 +99,12 @@ module.exports = class Type extends Emitter
 
     @resourcePromises[data.id]
 
-  createResource: (data) ->
+  create: (data) ->
     print.log 'Creating a new', @name, 'resource'
     resource = new Resource _type: this
     resource.update data
     resource
+
+  createResource: ->
+    console.warn 'Use Type::create, not ::createResource', arguments...
+    @create arguments...

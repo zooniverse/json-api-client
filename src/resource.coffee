@@ -12,13 +12,13 @@ module.exports = class Resource extends Emitter
   constructor: (config...) ->
     super
     @_changedKeys = []
-    mergeInto this, config... if config?
+    mergeInto this, config...
     @emit 'create'
     @_type.emit 'change'
     print.info "Constructed a resource: #{@_type.name} #{@id}", this
 
   # Get a promise for an attribute referring to (an)other resource(s).
-  attr: (attribute) ->
+  link: (attribute) ->
     print.info 'Getting link:', attribute
     if attribute of this
       print.warn "No need to access a non-linked attribute via attr: #{attribute}", this
@@ -32,6 +32,10 @@ module.exports = class Resource extends Emitter
     else
       print.error 'Not a link at all'
       Promise.reject new Error "No attribute #{attribute} of #{@_type.name} resource"
+
+  attr: ->
+    console.warn 'Use Resource::link, not ::attr', arguments...
+    @link arguments...
 
   _getLink: (name, link) ->
     if typeof link is 'string' or Array.isArray link
