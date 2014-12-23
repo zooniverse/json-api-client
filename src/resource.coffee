@@ -50,7 +50,7 @@ module.exports = class Resource extends Emitter
             resources
 
       else if type?
-        type = @_type.apiClient.types[type]
+        type = @_type.apiClient._types[type]
         type.get ids
 
     else if link?
@@ -70,7 +70,7 @@ module.exports = class Resource extends Emitter
             resources
 
       else if type? and ids?
-        type = @_type.apiClient.types[type]
+        type = @_type.apiClient._types[type]
         type.get ids
 
     else

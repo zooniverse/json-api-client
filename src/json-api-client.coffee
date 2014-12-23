@@ -12,10 +12,10 @@ module.exports = class JSONAPIClient
   root: '/'
   headers: null
 
-  types: null # Types that have been defined
+  _types: null # Types that have been defined
 
   constructor: (@root, @headers = {}) ->
-    @types = {}
+    @_types = {}
     print.info 'Created a new JSON-API client at', @root
 
   request: (method, url, data, additionalHeaders, callback) ->
@@ -29,7 +29,7 @@ module.exports = class JSONAPIClient
 
   for method in ['get', 'post', 'put', 'delete'] then do (method) =>
     @::[method] = ->
-      @request method.toUpperCase(), arguments...
+      @request method, arguments...
 
   processResponseTo: (request, callback) ->
     response = try JSON.parse request.responseText
@@ -51,20 +51,20 @@ module.exports = class JSONAPIClient
         print.log 'Got', resources ? 1, 'linked', type, 'resources.'
         @createType type
         for resource in [].concat resources
-          @types[type].addExistingResource resource
+          @_types[type].addExistingResource resource
 
     if 'data' of response
       print.log 'Got a top-level "data" collection of', response.data.length ? 1
       primaryResults = for resource in [].concat response.data
         @createType response.type
-        @types[response.type].addExistingResource resource
+        @_types[response.type].addExistingResource resource
     else
       primaryResults = []
       for type, resources of response when type not in ['links', 'linked', 'meta', 'data']
         print.log 'Got a top-level', type, 'collection of', resources.length ? 1
         @createType type
         for resource in [].concat resources
-          primaryResults.push @types[type].addExistingResource resource
+          primaryResults.push @_types[type].addExistingResource resource
 
     print.info 'Primary resources:', primaryResults
     callback? request, response
@@ -80,8 +80,8 @@ module.exports = class JSONAPIClient
       type.links[attributeName].type = attributeTypeName
 
   createType: (name) ->
-    @types[name] ?= new Type name, this
-    @types[name]
+    @_types[name] ?= new Type name, this
+    @_types[name]
 
   processErrorResponseTo: (request) ->
     Promise.reject try
