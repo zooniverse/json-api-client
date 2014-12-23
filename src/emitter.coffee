@@ -1,4 +1,19 @@
-print = require './print'
+DEFAULT_SIGNAL = 'change'
+
+arraysMatch = (array1, array2) ->
+  matches = (i for item, i in array1 when array2[i] is item)
+  array1.length is array2.length is matches.length
+
+callHandler = (handler, payload) ->
+  # Handlers can be in the form [context, function or method name, bound arguments...]
+  if Array.isArray handler
+    [context, handler, boundArgs...] = handler
+    if typeof handler is 'string'
+      handler = context[handler]
+  else
+    boundArgs = []
+  handler.apply context, boundArgs.concat payload
+  return
 
 module.exports = class Emitter
   _callbacks: null
@@ -6,41 +21,40 @@ module.exports = class Emitter
   constructor: ->
     @_callbacks = {}
 
-  listen: (signal, callback) ->
+  listen: ([signal]..., callback) ->
+    signal ?= DEFAULT_SIGNAL
     @_callbacks[signal] ?= []
     @_callbacks[signal].push callback
+    this
 
-  stopListening: (signal, callback) ->
-    if signal?
-      if @_callbacks[signal]?
-        if callback?
-          if Array.isArray callback
-            # Array-style callbacks need not be the exact same object.
-            index = -1
-            for handler, i in @_callbacks[signal] by -1 when Array.isArray(handler) and callback.length is handler.length
-              if (null for item, j in callback when handler[j] is item).length is callback.length
-                index = i
-                break
-          else
-            index = @_callbacks[signal].lastIndexOf callback
-          unless index is -1
-            @_callbacks[signal].splice index, 1
+  stopListening: ([signal]..., callback) ->
+    signal ?= DEFAULT_SIGNAL
+    if @_callbacks[signal]?
+      if callback?
+        if Array.isArray callback
+          # Array-style callbacks need not be the exact same object.
+          index = -1
+          for handler, i in @_callbacks[signal] by -1 when Array.isArray handler
+            if arraysMatch callback, handler
+              index = i
+              break
         else
-          @_callbacks[signal].splice 0
-    else
-      @stopListening signal for signal of @_callbacks
+          index = @_callbacks[signal].lastIndexOf callback
+        unless index is -1
+          @_callbacks[signal].splice index, 1
+      else
+        @_callbacks[signal].splice 0
+    this
 
   emit: (signal, payload...) ->
-    print.log 'Emitting', signal, JSON.stringify(payload), @_callbacks[signal]?.length
+    signal ?= DEFAULT_SIGNAL
     if signal of @_callbacks
       for callback in @_callbacks[signal]
-        @_callHandler callback, payload
+        callHandler callback, payload
+    this
 
-  _callHandler: (handler, args) ->
-    if Array.isArray handler
-      [context, handler, boundArgs...] = handler
-      if typeof handler is 'string'
-        handler = context[handler]
-    else
-      boundArgs = []
-    handler.apply context, boundArgs.concat args
+  destroy: ->
+    for signal of @_callbacks
+      for callback in @_callbacks[signal]
+        @stopListening signal, callback
+    return
