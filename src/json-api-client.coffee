@@ -36,37 +36,43 @@ module.exports = class JSONAPIClient
     print.log 'Processing response', response
 
     if 'links' of response
-      for typeAndAttribute, link of response.links
-        [type, attribute] = typeAndAttribute.split '.'
-        if typeof link is 'string'
-          href = link
-        else
-          {href, type: attributeType} = link
-
-        @handleLink type, attribute, href, attributeType
+      @_handleLinks response.links
 
     if 'linked' of response
-      for type, resources of response.linked
-        print.log 'Got', resources ? 1, 'linked', type, 'resources.'
-        for resource in [].concat resources
+      for type, linked of response.linked
+        linked = [].concat linked
+        print.log 'Got', linked.length, 'linked', type, 'resource(s)'
+        for resource in linked
           @type(type).addExistingResource resource
 
     if 'data' of response
-      print.log 'Got a top-level "data" collection of', response.data.length ? 1
-      primaryResults = for resource in [].concat response.data
-        @type(response.type).addExistingResource resource
+      data = [].concat response.data
+      print.log 'Got a top-level "data" collection of', data.length, 'resource(s)'
+      primaryResults = for resource in data
+        @type(resource.type).addExistingResource resource
     else
       primaryResults = []
-      for type, resources of response when type not in ['links', 'linked', 'meta', 'data']
-        print.log 'Got a top-level', type, 'collection of', resources.length ? 1
-        for resource in [].concat resources
-          primaryResults.push @type(type).addExistingResource resource
+      for typeName, resources of response when typeName not in ['meta', 'links', 'linked', 'data']
+        type = @type typeName
+        resources = [].concat resources
+        print.log 'Got a top-level', type, 'collection of', resources.length, 'resource(s)'
+        for resource in resources
+          primaryResults.push type.addExistingResource resource
 
     print.info 'Primary resources:', primaryResults
     callback? request, response
     Promise.all primaryResults
 
-  handleLink: (typeName, attributeName, hrefTemplate, attributeTypeName) ->
+  _handleLinks: (links) ->
+    for typeAndAttribute, link of links
+      [typeName, attributeName] = typeAndAttribute.split '.'
+      if typeof link is 'string'
+        href = link
+      else
+        {href, type} = link
+      @_handleLink typeName, attributeName, href, type
+
+  _handleLink: (typeName, attributeName, hrefTemplate, attributeTypeName) ->
     type = @type typeName
 
     type.links[attributeName] ?= {}
