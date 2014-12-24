@@ -125,7 +125,7 @@ module.exports = class Resource extends Emitter
     payload[@_type._name] = @getChangesSinceSave()
 
     save = if @id
-      @_type._apiClient.put @getURL(), payload
+      @_type._apiClient.put @_getURL(), payload
     else
       @_type._apiClient.post @_type._getURL(), payload
 
@@ -150,7 +150,7 @@ module.exports = class Resource extends Emitter
   delete: ->
     @emit 'will-delete'
     deletion = if @id
-      @_type._apiClient.delete(@getURL()).then =>
+      @_type._apiClient.delete(@_getURL()).then =>
         @_type.emit 'change'
     else
       Promise.resolve()
@@ -166,12 +166,11 @@ module.exports = class Resource extends Emitter
         break
     matches
 
-  getURL: ->
-    @href || @_type._getURL @id
+  _getURL: ->
+    @href || @_type._getURL @id, arguments...
 
   toJSON: ->
     result = {}
-    result[@_type._name] = {}
     for own key, value of this when key.charAt(0) isnt '_' and key not in @_readOnlyKeys
-      result[@_type._name][key] = value
+      result[key] = value
     result
