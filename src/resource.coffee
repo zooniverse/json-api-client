@@ -1,108 +1,23 @@
-print = require './print'
 Emitter = require './emitter'
 mergeInto = require './merge-into'
 
+# Turn a JSON-API "href" template into a usable URL.
+PLACEHOLDERS_PATTERN = /{(.+?)}/g
+
 module.exports = class Resource extends Emitter
-  _type: null # The resource type object
+  _type: null
+  _headers: null
+
+  _changedKeys: null
 
   _readOnlyKeys: ['id', 'type', 'href', 'created_at', 'updated_at']
 
-  _changedKeys: null # Dirty keys
-
-  constructor: (config...) ->
+  constructor: (configs...) ->
     super
     @_changedKeys = []
-    mergeInto this, config...
+    mergeInto this, configs...
     @emit 'create'
     @_type.emit 'change'
-    print.info "Constructed a resource: #{@_type._name} #{@id}", this
-
-  # Get a promise for an attribute referring to (an)other resource(s).
-  link: (attribute) ->
-    print.info 'Getting link:', attribute
-    if attribute of this
-      print.warn "No need to access a non-linked attribute via attr: #{attribute}", this
-      Promise.resolve @[attribute]
-    else if @links? and attribute of @links
-      print.log 'Link of resource'
-      @_getLink attribute, @links[attribute]
-    else if attribute of @_type._links
-      print.log 'Link of type'
-      @_getLink attribute, @_type._links[attribute]
-    else
-      print.error 'Not a link at all'
-      Promise.reject new Error "No attribute #{attribute} of #{@_type._name} resource"
-
-  attr: ->
-    console.warn 'Use Resource::link, not ::attr', arguments...
-    @link arguments...
-
-  _getLink: (name, link) ->
-    if typeof link is 'string' or Array.isArray link
-      print.log 'Linked by ID(s)'
-      ids = link
-      {href, type} = @_type._links[name]
-
-      if href?
-        context = {}
-        context[@_type._name] = this
-        appliedHREF = @applyHREF href, context
-        @_type._apiClient.get(appliedHREF).then (resources) =>
-          if typeof @links?[name] is 'string'
-            resources[0]
-          else
-            resources
-
-      else if type?
-        type = @_type._apiClient._types[type]
-        type.get ids
-
-    else if link?
-      print.log 'Linked by collection object', link
-      # It's a collection object.
-      {href, ids, type} = link
-
-      if href?
-        context = {}
-        context[@_type._name] = this
-        print.warn 'HREF', href
-        appliedHREF = @applyHREF href, context
-        @_type._apiClient.get(appliedHREF).then (resources) =>
-          if typeof @links?[name] is 'string'
-            resources[0]
-          else
-            resources
-
-      else if type? and ids?
-        type = @_type._apiClient._types[type]
-        type.get ids
-
-    else
-      print.log 'Linked, but blank'
-      # It exists, but it's blank.
-      Promise.resolve null
-
-  # Turn a JSON-API "href" template into a usable URL.
-  PLACEHOLDERS_PATTERN: /{(.+?)}/g
-  applyHREF: (href, context) ->
-    href.replace @PLACEHOLDERS_PATTERN, (_, path) ->
-      segments = path.split '.'
-      print.warn 'Segments', segments
-
-      value = context
-      until segments.length is 0
-        segment = segments.shift()
-        value = value[segment] ? value.links?[segment]
-
-      print.warn 'Value', value
-
-      if Array.isArray value
-        value = value.join ','
-
-      unless typeof value is 'string'
-        throw new Error "Value for '#{path}' in '#{href}' should be a string."
-
-      value
 
   update: (changeSet = {}) ->
     @emit 'will-change'
@@ -125,9 +40,12 @@ module.exports = class Resource extends Emitter
     payload[@_type._name] = @getChangesSinceSave()
 
     save = if @id
-      @_type._apiClient.put @_getURL(), payload
+      headers = {}
+      if 'Last-Modified' of @_headers
+        headers['If-Unmodified-Since'] = @_headers['Last-Modified']
+      @_type._client.put @_getURL(), payload, headers
     else
-      @_type._apiClient.post @_type._getURL(), payload
+      @_type._client.post @_type._getURL(), payload
 
     save.then ([result]) =>
       @update result
@@ -135,11 +53,8 @@ module.exports = class Resource extends Emitter
       @emit 'save'
       result
 
-  refresh: ->
-    if @id
-      @_type.get @id
-    else
-      Promise.reject new Error 'Can\'t refresh a resource with no ID'
+  hasUnsavedChanges: ->
+    @_changedKeys.length isnt 0
 
   getChangesSinceSave: ->
     changes = {}
@@ -147,24 +62,88 @@ module.exports = class Resource extends Emitter
       changes[key] = @[key]
     changes
 
+  getFresh: ->
+    if @id
+      @_type.get @id
+    else
+      Promise.reject new Error 'Can\'t get fresh copy of a resource with no ID'
+
   delete: ->
     @emit 'will-delete'
     deletion = if @id
-      @_type._apiClient.delete(@_getURL()).then =>
+      headers = {}
+      if 'Last-Modified' of @_headers
+        headers['If-Unmodified-Since'] = @_headers['Last-Modified']
+      @_type._client.delete(@_getURL(), null, headers).then =>
         @_type.emit 'change'
+        null
     else
       Promise.resolve()
 
     deletion.then =>
       @emit 'delete'
 
-  matchesQuery: (query) ->
-    matches = true
-    for param, value of query
-      if @[param] isnt value
-        matches = false
-        break
-    matches
+  link: (name) ->
+    link = @links?[name] ? @_type._links[name]
+    if link?
+      @_getLink name, link
+    else
+      throw new Error "No link '#{name}' defined for #{@_type.name} #{@id}"
+
+  _getLink: (name, link) ->
+    if typeof link is 'string' or Array.isArray link
+      {href, type} = @_type._links[name]
+
+      if href?
+        @_type._client.get(@_applyHREF href).then (resources) =>
+          if typeof @links[name] is 'string'
+            resources[0]
+          else
+            resources
+
+      else if type?
+        type = @_type._client._types[type]
+        type.get link
+
+      else
+        throw new Error "No HREF or type for link '#{name}' of #{@_type.name} #{@id}"
+
+    else # It's a collection object.
+      {href, ids, type} = link
+
+      if href?
+        @_type._client.get(@_applyHREF href).then (resources) =>
+          if typeof @links[name] is 'string'
+            resources[0]
+          else
+            resources
+
+      else if type? and ids?
+        type = @_type._client._types[type]
+        type.get ids
+
+      else
+        throw new Error "No HREF, type, or IDs for link '#{name}' of #{@_type.name} #{@id}"
+
+  _applyHREF: (href) ->
+    context = {}
+    context[@_type._name] = this
+
+    href.replace PLACEHOLDERS_PATTERN, (_, path) ->
+      segments = path.split '.'
+
+      value = context
+      until segments.length is 0
+        segment = segments.shift()
+        value = value[segment] ? value.links?[segment]
+
+      if Array.isArray value
+        value = value.join ','
+
+      unless typeof value is 'string'
+        throw new Error "Value for '#{path}' in '#{href}' should be a string."
+
+      value
 
   _getURL: ->
     @href || @_type._getURL @id, arguments...
@@ -174,3 +153,7 @@ module.exports = class Resource extends Emitter
     for own key, value of this when key.charAt(0) isnt '_' and key not in @_readOnlyKeys
       result[key] = value
     result
+
+  attr: ->
+    console.warn 'Use Resource::link, not ::attr', arguments...
+    @link arguments...
