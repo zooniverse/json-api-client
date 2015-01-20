@@ -25,7 +25,7 @@ module.exports = (method, url, data, headers, modify) ->
         else
           reject request
 
-    unless headers?['Content-Type']?.indexOf('json') is -1
+    if data? and headers?['Content-Type']?.indexOf('json') isnt -1
       data = JSON.stringify data
 
     request.send data
