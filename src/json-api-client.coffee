@@ -1,5 +1,6 @@
 makeHTTPRequest = require './make-http-request'
 mergeInto = require './merge-into'
+Emitter = require './emitter'
 Type = require './type'
 Model = require './model'
 Resource = require './resource'
@@ -89,6 +90,7 @@ module.exports = class JSONAPIClient
     @type arguments...
 
 module.exports.util = {makeHTTPRequest}
+module.exports.Emitter = Emitter
 module.exports.Type = Type
 module.exports.Model = Model
 module.exports.Resource = Resource
