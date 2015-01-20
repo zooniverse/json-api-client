@@ -48,7 +48,7 @@ module.exports = class Resource extends Model
     if @id
       @_type.get @id
     else
-      Promise.reject new Error 'Can\'t get fresh copy of a resource with no ID'
+      throw new Error 'Can\'t get fresh copy of a resource with no ID'
 
   delete: ->
     @emit 'will-delete'

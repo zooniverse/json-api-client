@@ -26,7 +26,6 @@ module.exports = class JSONAPIClient
 
     makeHTTPRequest method, fullURL, payload, allHeaders
       .then @processResponseTo.bind this
-      .catch @processErrorResponseTo.bind this
 
   for method in ['get', 'post', 'put', 'delete'] then do (method) =>
     @::[method] = ->
@@ -81,9 +80,6 @@ module.exports = class JSONAPIClient
   type: (name) ->
     @_types[name] ?= new Type name, this
     @_types[name]
-
-  processErrorResponseTo: (request) ->
-    Promise.reject request
 
   createType: ->
     console.warn 'Use JSONAPIClient::type, not ::createType', arguments...
