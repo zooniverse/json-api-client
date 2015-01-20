@@ -1,6 +1,7 @@
 makeHTTPRequest = require './make-http-request'
 mergeInto = require './merge-into'
 Type = require './type'
+Model = require './model'
 Resource = require './resource'
 
 DEFAULT_TYPE_AND_ACCEPT =
@@ -89,4 +90,5 @@ module.exports = class JSONAPIClient
 
 module.exports.util = {makeHTTPRequest}
 module.exports.Type = Type
+module.exports.Model = Model
 module.exports.Resource = Resource

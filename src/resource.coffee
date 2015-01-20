@@ -1,37 +1,22 @@
-Emitter = require './emitter'
+Model = require './model'
 mergeInto = require './merge-into'
 
 # Turn a JSON-API "href" template into a usable URL.
 PLACEHOLDERS_PATTERN = /{(.+?)}/g
 
-module.exports = class Resource extends Emitter
+module.exports = class Resource extends Model
+  _ignoredKeys: Model::_ignoredKeys.concat ['id', 'type', 'href', 'created_at', 'updated_at']
+
   _type: null
   _headers: null
 
-  _changedKeys: null
-
-  _readOnlyKeys: ['id', 'type', 'href', 'created_at', 'updated_at']
-
   constructor: (configs...) ->
     super
-    @_changedKeys = []
-    mergeInto this, configs...
-    @emit 'create'
     @_type.emit 'change'
 
-  update: (changeSet = {}) ->
-    @emit 'will-change'
-    actualChanges = 0
-
-    for key, value of changeSet when @[key] isnt value
-      @[key] = value
-      unless key in @_changedKeys
-        @_changedKeys.push key
-      actualChanges += 1
-
-    unless actualChanges is 0
-      @emit 'change'
-      @_type.emit 'change'
+  update: ->
+    super
+    @_type.emit 'change'
 
   save: ->
     @emit 'will-save'
@@ -52,9 +37,6 @@ module.exports = class Resource extends Emitter
       @_changedKeys.splice 0
       @emit 'save'
       result
-
-  hasUnsavedChanges: ->
-    @_changedKeys.length isnt 0
 
   getChangesSinceSave: ->
     changes = {}
@@ -147,12 +129,6 @@ module.exports = class Resource extends Emitter
 
   _getURL: ->
     @href || @_type._getURL @id, arguments...
-
-  toJSON: ->
-    result = {}
-    for own key, value of this when key.charAt(0) isnt '_' and key not in @_readOnlyKeys
-      result[key] = value
-    result
 
   attr: ->
     console.warn 'Use Resource::link, not ::attr', arguments...
