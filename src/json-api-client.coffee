@@ -25,13 +25,14 @@ module.exports = class JSONAPIClient
     allHeaders = mergeInto {}, DEFAULT_TYPE_AND_ACCEPT, @headers, headers
 
     makeHTTPRequest method, fullURL, payload, allHeaders
-      .then @processResponseTo.bind this
+      .then @processResponse.bind this
+      .catch @handleError.bind this
 
   for method in ['get', 'post', 'put', 'delete'] then do (method) =>
     @::[method] = ->
       @request method, arguments...
 
-  processResponseTo: (request) ->
+  processResponse: (request) ->
     response = try JSON.parse request.responseText catch then {}
     headers = @_getHeadersFor request
 
@@ -47,9 +48,10 @@ module.exports = class JSONAPIClient
     if 'data' of response
       for resourceData in [].concat response.data
         results.push @type(resourceData.type).create resourceData, headers
-    for typeName, resources of response when typeName not in RESERVED_TOP_LEVEL_KEYS
-      for resourceData in [].concat resources
-        results.push @type(typeName).create resourceData, headers
+    else
+      for typeName, resources of response when typeName not in RESERVED_TOP_LEVEL_KEYS
+        for resourceData in [].concat resources
+          results.push @type(typeName).create resourceData, headers
     results
 
   _getHeadersFor: (request) ->
@@ -76,6 +78,10 @@ module.exports = class JSONAPIClient
       type._links[attributeName].href = hrefTemplate
     if attributeTypeName?
       type._links[attributeName].type = attributeTypeName
+
+  handleError: ->
+    # Override this as necessary.
+    Promise.reject arguments...
 
   type: (name) ->
     @_types[name] ?= new Type name, this

@@ -12,7 +12,10 @@ module.exports = class Type extends Emitter
     @_links = {}
 
   create: (data, headers = {}) ->
-    new Resource data, _type: this, _headers: headers
+    newResource = new Resource data, _type: this, _headers: headers
+    unless 'id' of data
+      newResource.update data
+    newResource
 
   get: ->
     if typeof arguments[0] is 'string'

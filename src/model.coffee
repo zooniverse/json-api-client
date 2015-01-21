@@ -13,7 +13,7 @@ module.exports = class Model extends Emitter
 
   update: (changeSet = {}) ->
     @emit 'will-change'
-    for key, value of changeSet when @[key] isnt value
+    for own key, value of changeSet
       if typeof value is 'function'
         value = value()
       @[key] = value

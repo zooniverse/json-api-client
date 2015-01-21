@@ -10,6 +10,6 @@
   },
   "scripts": {
     "start": "onchange ./src/* -- npm run build",
-    "build": "browserify --debug --entry ./src/json-api-client.coffee --extension .coffee --transform coffeeify --standalone JSONAPIClient | derequire > ./json-api-client.js"
+    "build": "browserify --entry ./src/json-api-client.coffee --extension .coffee --transform coffeeify --standalone JSONAPIClient | derequire > ./json-api-client.js"
   }
 }

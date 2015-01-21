@@ -33,8 +33,6 @@ module.exports = class Resource extends Model
       @_type._client.post @_type._getURL(), payload
 
     save.then ([result]) =>
-      @update result
-      @_changedKeys.splice 0
       @emit 'save'
       result
 
