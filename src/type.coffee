@@ -6,16 +6,23 @@ module.exports = class Type extends Emitter
   _client: null
 
   _links: null # Resource link definitions
+  _cache: null
 
   constructor: (@_name, @_client) ->
     super
     @_links = {}
+    @_cache = {}
+    unless @_name and @_client?
+      throw new Error 'Don\'t call the Type constructor directly, use `client.type("things");`'
 
-  create: (data, headers = {}) ->
-    newResource = new Resource data, _type: this, _headers: headers
-    unless 'id' of data
-      newResource.update data
-    newResource
+  create: (data = {}, headers = {}) ->
+    resource = @_cache[data.id]
+    if resource?
+      resource._headers = headers
+    else
+      resource = new Resource this, headers
+    resource.update data
+    resource
 
   get: ->
     if typeof arguments[0] is 'string'

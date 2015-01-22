@@ -10,17 +10,20 @@ module.exports = class Resource extends Model
   _type: null
   _headers: null
 
-  constructor: (configs...) ->
-    super
+  constructor: (@_type, @_headers) ->
+    super null
+    unless @_type? and @_headers?
+      throw new Error 'Don\'t call the Resource constructor directly, use `client.type("things").create({});`'
     @_type.emit 'change'
 
   update: ->
-    super
-    @_type.emit 'change'
+    changesMade = super
+    if changesMade and @id
+      @_type._cache[@id] = this
+      @_type.emit 'change'
+    changesMade
 
   save: ->
-    @emit 'will-save'
-
     payload = {}
     payload[@_type._name] = @getChangesSinceSave()
 
@@ -42,26 +45,33 @@ module.exports = class Resource extends Model
       changes[key] = @[key]
     changes
 
-  getFresh: ->
+  refresh: ->
     if @id
       @_type.get @id
     else
-      throw new Error 'Can\'t get fresh copy of a resource with no ID'
+      throw new Error 'Can\'t refresh a resource with no ID'
+
+  uncache: ->
+    if @id
+      @emit 'uncache'
+      delete @_type._cache[@id]
+    else
+      throw new Error 'Can\'t uncache a resource with no ID'
 
   delete: ->
-    @emit 'will-delete'
     deletion = if @id
+      @uncache()
       headers = {}
       if 'Last-Modified' of @_headers
         headers['If-Unmodified-Since'] = @_headers['Last-Modified']
-      @_type._client.delete(@_getURL(), null, headers).then =>
-        @_type.emit 'change'
-        null
+      @_type._client.delete @_getURL(), null, headers
     else
       Promise.resolve()
 
     deletion.then =>
       @emit 'delete'
+      @_type.emit 'change'
+      null
 
   link: (name) ->
     link = @links?[name] ? @_type._links[name]

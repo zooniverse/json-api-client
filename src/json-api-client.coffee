@@ -23,7 +23,6 @@ module.exports = class JSONAPIClient
   request: (method, url, payload, headers) ->
     fullURL = @root + url
     allHeaders = mergeInto {}, DEFAULT_TYPE_AND_ACCEPT, @headers, headers
-
     makeHTTPRequest method, fullURL, payload, allHeaders
       .then @processResponse.bind this
       .catch @handleError.bind this

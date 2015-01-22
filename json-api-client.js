@@ -188,6 +188,7 @@ module.exports = JSONAPIClient = (function() {
       }
     })();
     headers = this._getHeadersFor(request);
+    window.request = request;
     if ('links' in response) {
       this._handleLinks(response.links);
     }
@@ -401,23 +402,29 @@ module.exports = Model = (function(_super) {
   }
 
   Model.prototype.update = function(changeSet) {
-    var key, value;
+    var changesMade, key, value;
     if (changeSet == null) {
       changeSet = {};
     }
-    this.emit('will-change');
+    changesMade = false;
     for (key in changeSet) {
       if (!__hasProp.call(changeSet, key)) continue;
       value = changeSet[key];
+      if (this[key] !== value) {
+        changesMade = true;
+        if (__indexOf.call(this._changedKeys, key) < 0) {
+          this._changedKeys.push(key);
+        }
+      }
       if (typeof value === 'function') {
         value = value();
       }
       this[key] = value;
-      if (__indexOf.call(this._changedKeys, key) < 0) {
-        this._changedKeys.push(key);
-      }
     }
-    return this.emit('change');
+    if (changesMade) {
+      this.emit('change');
+    }
+    return changesMade;
   };
 
   Model.prototype.hasUnsavedChanges = function() {
@@ -464,21 +471,28 @@ module.exports = Resource = (function(_super) {
 
   Resource.prototype._headers = null;
 
-  function Resource() {
-    var configs;
-    configs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-    Resource.__super__.constructor.apply(this, arguments);
+  function Resource(_type, _headers) {
+    this._type = _type;
+    this._headers = _headers;
+    Resource.__super__.constructor.call(this, null);
+    if (!((this._type != null) && (this._headers != null))) {
+      throw new Error('Don\'t call the Resource constructor directly, use `client.type("things").create({});`');
+    }
     this._type.emit('change');
   }
 
   Resource.prototype.update = function() {
-    Resource.__super__.update.apply(this, arguments);
-    return this._type.emit('change');
+    var changesMade;
+    changesMade = Resource.__super__.update.apply(this, arguments);
+    if (changesMade && this.id) {
+      this._type._cache[this.id] = this;
+      this._type.emit('change');
+    }
+    return changesMade;
   };
 
   Resource.prototype.save = function() {
     var headers, payload, save;
-    this.emit('will-save');
     payload = {};
     payload[this._type._name] = this.getChangesSinceSave();
     save = this.id ? (headers = {}, 'Last-Modified' in this._headers ? headers['If-Unmodified-Since'] = this._headers['Last-Modified'] : void 0, this._type._client.put(this._getURL(), payload, headers)) : this._type._client.post(this._type._getURL(), payload);
@@ -503,26 +517,31 @@ module.exports = Resource = (function(_super) {
     return changes;
   };
 
-  Resource.prototype.getFresh = function() {
+  Resource.prototype.refresh = function() {
     if (this.id) {
       return this._type.get(this.id);
     } else {
-      throw new Error('Can\'t get fresh copy of a resource with no ID');
+      throw new Error('Can\'t refresh a resource with no ID');
+    }
+  };
+
+  Resource.prototype.uncache = function() {
+    if (this.id) {
+      this.emit('uncache');
+      return delete this._type._cache[this.id];
+    } else {
+      throw new Error('Can\'t uncache a resource with no ID');
     }
   };
 
   Resource.prototype["delete"] = function() {
     var deletion, headers;
-    this.emit('will-delete');
-    deletion = this.id ? (headers = {}, 'Last-Modified' in this._headers ? headers['If-Unmodified-Since'] = this._headers['Last-Modified'] : void 0, this._type._client["delete"](this._getURL(), null, headers).then((function(_this) {
-      return function() {
-        _this._type.emit('change');
-        return null;
-      };
-    })(this))) : Promise.resolve();
+    deletion = this.id ? (this.uncache(), headers = {}, 'Last-Modified' in this._headers ? headers['If-Unmodified-Since'] = this._headers['Last-Modified'] : void 0, this._type._client["delete"](this._getURL(), null, headers)) : Promise.resolve();
     return deletion.then((function(_this) {
       return function() {
-        return _this.emit('delete');
+        _this.emit('delete');
+        _this._type.emit('change');
+        return null;
       };
     })(this));
   };
@@ -635,26 +654,35 @@ module.exports = Type = (function(_super) {
 
   Type.prototype._links = null;
 
+  Type.prototype._cache = null;
+
   function Type(_name, _client) {
     this._name = _name;
     this._client = _client;
     Type.__super__.constructor.apply(this, arguments);
     this._links = {};
+    this._cache = {};
+    if (!(this._name && (this._client != null))) {
+      throw new Error('Don\'t call the Type constructor directly, use `client.type("things");`');
+    }
   }
 
   Type.prototype.create = function(data, headers) {
-    var newResource;
+    var resource;
+    if (data == null) {
+      data = {};
+    }
     if (headers == null) {
       headers = {};
     }
-    newResource = new Resource(data, {
-      _type: this,
-      _headers: headers
-    });
-    if (!('id' in data)) {
-      newResource.update(data);
+    resource = this._cache[data.id];
+    if (resource != null) {
+      resource._headers = headers;
+    } else {
+      resource = new Resource(this, headers);
     }
-    return newResource;
+    resource.update(data);
+    return resource;
   };
 
   Type.prototype.get = function() {

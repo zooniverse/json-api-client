@@ -12,14 +12,18 @@ module.exports = class Model extends Emitter
     @emit 'create'
 
   update: (changeSet = {}) ->
-    @emit 'will-change'
+    changesMade = false
     for own key, value of changeSet
+      if @[key] isnt value
+        changesMade = true
+        unless key in @_changedKeys
+          @_changedKeys.push key
       if typeof value is 'function'
         value = value()
       @[key] = value
-      unless key in @_changedKeys
-        @_changedKeys.push key
-    @emit 'change'
+    if changesMade
+      @emit 'change'
+    changesMade
 
   hasUnsavedChanges: ->
     @_changedKeys.length isnt 0
