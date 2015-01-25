@@ -106,6 +106,7 @@ module.exports = Emitter = (function() {
 
   Emitter.prototype.destroy = function() {
     var callback, signal, _i, _len, _ref;
+    this.emit('destroy');
     for (signal in this._callbacks) {
       _ref = this._callbacks[signal];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -188,7 +189,6 @@ module.exports = JSONAPIClient = (function() {
       }
     })();
     headers = this._getHeadersFor(request);
-    window.request = request;
     if ('links' in response) {
       this._handleLinks(response.links);
     }

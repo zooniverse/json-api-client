@@ -54,6 +54,7 @@ module.exports = class Emitter
     this
 
   destroy: ->
+    @emit 'destroy'
     for signal of @_callbacks
       for callback in @_callbacks[signal]
         @stopListening signal, callback
