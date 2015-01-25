@@ -2,6 +2,8 @@ Emitter = require './emitter'
 Resource = require './resource'
 
 module.exports = class Type extends Emitter
+  Resource: Resource
+
   _name: ''
   _client: null
 
@@ -20,7 +22,7 @@ module.exports = class Type extends Emitter
     if resource?
       resource._headers = headers
     else
-      resource = new Resource this, headers
+      resource = new @Resource this, headers
     resource.update data
     resource
 

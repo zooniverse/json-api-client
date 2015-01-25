@@ -648,6 +648,8 @@ Resource = _dereq_('./resource');
 module.exports = Type = (function(_super) {
   __extends(Type, _super);
 
+  Type.prototype.Resource = Resource;
+
   Type.prototype._name = '';
 
   Type.prototype._client = null;
@@ -679,7 +681,7 @@ module.exports = Type = (function(_super) {
     if (resource != null) {
       resource._headers = headers;
     } else {
-      resource = new Resource(this, headers);
+      resource = new this.Resource(this, headers);
     }
     resource.update(data);
     return resource;
