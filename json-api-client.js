@@ -376,6 +376,7 @@ module.exports = function() {
 
 },{}],5:[function(_dereq_,module,exports){
 var Emitter, Model, mergeInto,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice,
@@ -392,9 +393,12 @@ module.exports = Model = (function(_super) {
 
   Model.prototype._changedKeys = null;
 
+  Model.prototype._willChangeTimeout = NaN;
+
   function Model() {
     var configs;
     configs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    this._triggerBatchChange = __bind(this._triggerBatchChange, this);
     Model.__super__.constructor.apply(this, arguments);
     this._changedKeys = [];
     mergeInto.apply(null, [this].concat(__slice.call(configs)));
@@ -402,29 +406,31 @@ module.exports = Model = (function(_super) {
   }
 
   Model.prototype.update = function(changeSet) {
-    var changesMade, key, value;
+    var key, value;
     if (changeSet == null) {
       changeSet = {};
     }
-    changesMade = false;
     for (key in changeSet) {
       if (!__hasProp.call(changeSet, key)) continue;
       value = changeSet[key];
-      if (this[key] !== value) {
-        changesMade = true;
-        if (__indexOf.call(this._changedKeys, key) < 0) {
-          this._changedKeys.push(key);
-        }
+      if (__indexOf.call(this._changedKeys, key) < 0) {
+        this._changedKeys.push(key);
       }
       if (typeof value === 'function') {
         value = value();
       }
       this[key] = value;
     }
-    if (changesMade) {
-      this.emit('change');
+    if (!isNaN(this._willChangeTimeout)) {
+      clearTimeout(this._willChangeTimeout);
     }
-    return changesMade;
+    this._willChangeTimeout = setTimeout(this._triggerBatchChange);
+    return this;
+  };
+
+  Model.prototype._triggerBatchChange = function() {
+    this.emit('change');
+    return this._willChangeTimeout = NaN;
   };
 
   Model.prototype.hasUnsavedChanges = function() {

@@ -4,6 +4,7 @@ mergeInto = require './merge-into'
 module.exports = class Model extends Emitter
   _ignoredKeys: []
   _changedKeys: null
+  _willChangeTimeout: NaN
 
   constructor: (configs...) ->
     super
@@ -12,18 +13,20 @@ module.exports = class Model extends Emitter
     @emit 'create'
 
   update: (changeSet = {}) ->
-    changesMade = false
     for own key, value of changeSet
-      if @[key] isnt value
-        changesMade = true
-        unless key in @_changedKeys
-          @_changedKeys.push key
+      unless key in @_changedKeys
+        @_changedKeys.push key
       if typeof value is 'function'
         value = value()
       @[key] = value
-    if changesMade
-      @emit 'change'
-    changesMade
+    unless isNaN @_willChangeTimeout
+      clearTimeout @_willChangeTimeout
+    @_willChangeTimeout = setTimeout @_triggerBatchChange
+    this
+
+  _triggerBatchChange: =>
+    @emit 'change'
+    @_willChangeTimeout = NaN
 
   hasUnsavedChanges: ->
     @_changedKeys.length isnt 0
