@@ -105,18 +105,17 @@ module.exports = class Resource extends Model
         throw new Error "No HREF or type for link '#{name}' of #{@_type.name} #{@id}"
 
     else # It's a collection object.
-      {href, ids, type} = link
+      {id, ids, type, href} = link
 
-      if href?
+      if (id? or ids?) and type?
+        @_type._client.type(type).get id ? ids
+
+      else if href?
         @_type._client.get(@_applyHREF href).then (resources) =>
           if typeof @links[name] is 'string'
             resources[0]
           else
             resources
-
-      else if type? and ids?
-        type = @_type._client._types[type]
-        type.get ids
 
       else
         throw new Error "No HREF, type, or IDs for link '#{name}' of #{@_type.name} #{@id}"

@@ -574,7 +574,7 @@ module.exports = Resource = (function(_super) {
   };
 
   Resource.prototype._getLink = function(name, link) {
-    var href, ids, type, _ref;
+    var href, id, ids, type, _ref;
     if (typeof link === 'string' || Array.isArray(link)) {
       _ref = this._type._links[name], href = _ref.href, type = _ref.type;
       if (href != null) {
@@ -594,8 +594,10 @@ module.exports = Resource = (function(_super) {
         throw new Error("No HREF or type for link '" + name + "' of " + this._type.name + " " + this.id);
       }
     } else {
-      href = link.href, ids = link.ids, type = link.type;
-      if (href != null) {
+      id = link.id, ids = link.ids, type = link.type, href = link.href;
+      if (((id != null) || (ids != null)) && (type != null)) {
+        return this._type._client.type(type).get(id != null ? id : ids);
+      } else if (href != null) {
         return this._type._client.get(this._applyHREF(href)).then((function(_this) {
           return function(resources) {
             if (typeof _this.links[name] === 'string') {
@@ -605,9 +607,6 @@ module.exports = Resource = (function(_super) {
             }
           };
         })(this));
-      } else if ((type != null) && (ids != null)) {
-        type = this._type._client._types[type];
-        return type.get(ids);
       } else {
         throw new Error("No HREF, type, or IDs for link '" + name + "' of " + this._type.name + " " + this.id);
       }
