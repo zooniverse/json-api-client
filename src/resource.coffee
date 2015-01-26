@@ -48,7 +48,7 @@ module.exports = class Resource extends Model
 
   refresh: ->
     if @id
-      @_type.get @id
+      @_type.get @id, {}
     else
       throw new Error 'Can\'t refresh a resource with no ID'
 

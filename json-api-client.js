@@ -527,7 +527,7 @@ module.exports = Resource = (function(_super) {
 
   Resource.prototype.refresh = function() {
     if (this.id) {
-      return this._type.get(this.id);
+      return this._type.get(this.id, {});
     } else {
       throw new Error('Can\'t refresh a resource with no ID');
     }
@@ -647,7 +647,8 @@ module.exports = Resource = (function(_super) {
 var Emitter, Resource, Type,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  __slice = [].slice;
+  __slice = [].slice,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 Emitter = _dereq_('./emitter');
 
@@ -722,10 +723,47 @@ module.exports = Type = (function(_super) {
   };
 
   Type.prototype._getByIDs = function() {
-    var ids, otherArgs, url, _ref;
+    var fetch, id, ids, inCache, otherArgs, toFetch, url, _ref;
     ids = arguments[0], otherArgs = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-    url = this._getURL(ids.join(','));
-    return (_ref = this._client).get.apply(_ref, [url].concat(__slice.call(otherArgs)));
+    inCache = (function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = ids.length; _i < _len; _i++) {
+        id = ids[_i];
+        if (id in this._cache && otherArgs.length === 0) {
+          _results.push(id);
+        }
+      }
+      return _results;
+    }).call(this);
+    toFetch = (function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = ids.length; _i < _len; _i++) {
+        id = ids[_i];
+        if (__indexOf.call(inCache, id) < 0) {
+          _results.push(id);
+        }
+      }
+      return _results;
+    })();
+    fetch = toFetch.length === 0 ? Promise.resolve([]) : (url = this._getURL(toFetch.join(',')), (_ref = this._client).get.apply(_ref, [url].concat(__slice.call(otherArgs))));
+    return fetch.then((function(_this) {
+      return function(fetched) {
+        var fetchedByID, resource, _i, _j, _len, _len1, _ref1, _results;
+        fetchedByID = {};
+        for (_i = 0, _len = fetched.length; _i < _len; _i++) {
+          resource = fetched[_i];
+          fetchedByID[resource.id] = resource;
+        }
+        _results = [];
+        for (_j = 0, _len1 = ids.length; _j < _len1; _j++) {
+          id = ids[_j];
+          _results.push((_ref1 = fetchedByID[id]) != null ? _ref1 : _this._cache[id]);
+        }
+        return _results;
+      };
+    })(this));
   };
 
   Type.prototype._getByQuery = function() {
