@@ -9,13 +9,18 @@ module.exports = class Resource extends Model
 
   _type: null
   _headers: null
+  _meta: null
 
   constructor: (@_type) ->
     super null
     @_headers ?= {}
+    @_meta ?= {}
     unless @_type?
       throw new Error 'Don\'t call the Resource constructor directly, use `client.type("things").create({});`'
     @_type.emit 'change'
+
+  getRequestMeta: (key) ->
+    @_meta[key ? @_type._name]
 
   update: ->
     value = super

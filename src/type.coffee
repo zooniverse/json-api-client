@@ -17,13 +17,14 @@ module.exports = class Type extends Emitter
     unless @_name and @_client?
       throw new Error 'Don\'t call the Type constructor directly, use `client.type("things");`'
 
-  create: (data = {}, headers = {}) ->
+  create: (data = {}, headers = {}, meta = {}) ->
     if data.type and data.type isnt @_name
       @_client.type(data.type).create arguments...
     else
       resource = @_cache[data.id]
       resource ?= new @Resource this
       resource._headers = headers
+      resource._meta = meta
       resource.update data
       if resource.id
         resource._changedKeys.splice 0

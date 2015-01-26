@@ -41,16 +41,16 @@ module.exports = class JSONAPIClient
     if 'linked' of response
       for typeName, linkedResources of response.linked
         for resourceData in [].concat linkedResources
-          @type(typeName).create resourceData, headers
+          @type(typeName).create resourceData, headers, response.meta
 
     results = []
     if 'data' of response
       for resourceData in [].concat response.data
-        results.push @type(resourceData.type).create resourceData, headers
+        results.push @type(resourceData.type).create resourceData, headers, response.meta
     else
       for typeName, resources of response when typeName not in RESERVED_TOP_LEVEL_KEYS
         for resourceData in [].concat resources
-          results.push @type(typeName).create resourceData, headers
+          results.push @type(typeName).create resourceData, headers, response.meta
     results
 
   _getHeadersFor: (request) ->

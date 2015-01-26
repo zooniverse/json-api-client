@@ -199,7 +199,7 @@ module.exports = JSONAPIClient = (function() {
         _ref2 = [].concat(linkedResources);
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
           resourceData = _ref2[_j];
-          this.type(typeName).create(resourceData, headers);
+          this.type(typeName).create(resourceData, headers, response.meta);
         }
       }
     }
@@ -208,7 +208,7 @@ module.exports = JSONAPIClient = (function() {
       _ref3 = [].concat(response.data);
       for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
         resourceData = _ref3[_k];
-        results.push(this.type(resourceData.type).create(resourceData, headers));
+        results.push(this.type(resourceData.type).create(resourceData, headers, response.meta));
       }
     } else {
       for (typeName in response) {
@@ -217,7 +217,7 @@ module.exports = JSONAPIClient = (function() {
           _ref4 = [].concat(resources);
           for (_l = 0, _len3 = _ref4.length; _l < _len3; _l++) {
             resourceData = _ref4[_l];
-            results.push(this.type(typeName).create(resourceData, headers));
+            results.push(this.type(typeName).create(resourceData, headers, response.meta));
           }
         }
       }
@@ -477,17 +477,26 @@ module.exports = Resource = (function(_super) {
 
   Resource.prototype._headers = null;
 
+  Resource.prototype._meta = null;
+
   function Resource(_type) {
     this._type = _type;
     Resource.__super__.constructor.call(this, null);
     if (this._headers == null) {
       this._headers = {};
     }
+    if (this._meta == null) {
+      this._meta = {};
+    }
     if (this._type == null) {
       throw new Error('Don\'t call the Resource constructor directly, use `client.type("things").create({});`');
     }
     this._type.emit('change');
   }
+
+  Resource.prototype.getRequestMeta = function(key) {
+    return this._meta[key != null ? key : this._type._name];
+  };
 
   Resource.prototype.update = function() {
     var value;
@@ -678,13 +687,16 @@ module.exports = Type = (function(_super) {
     }
   }
 
-  Type.prototype.create = function(data, headers) {
+  Type.prototype.create = function(data, headers, meta) {
     var resource, _ref;
     if (data == null) {
       data = {};
     }
     if (headers == null) {
       headers = {};
+    }
+    if (meta == null) {
+      meta = {};
     }
     if (data.type && data.type !== this._name) {
       return (_ref = this._client.type(data.type)).create.apply(_ref, arguments);
@@ -694,6 +706,7 @@ module.exports = Type = (function(_super) {
         resource = new this.Resource(this);
       }
       resource._headers = headers;
+      resource._meta = meta;
       resource.update(data);
       if (resource.id) {
         resource._changedKeys.splice(0);
