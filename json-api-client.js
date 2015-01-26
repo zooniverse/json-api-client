@@ -690,6 +690,9 @@ module.exports = Type = (function(_super) {
       resource = new this.Resource(this, headers);
     }
     resource.update(data);
+    if (resource.id) {
+      resource._changedKeys.splice(0);
+    }
     return resource;
   };
 

@@ -24,6 +24,8 @@ module.exports = class Type extends Emitter
     else
       resource = new @Resource this, headers
     resource.update data
+    if resource.id
+      resource._changedKeys.splice 0
     resource
 
   get: ->
