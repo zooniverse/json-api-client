@@ -180,7 +180,7 @@ module.exports = JSONAPIClient = (function() {
   }
 
   JSONAPIClient.prototype.processResponse = function(request) {
-    var headers, linked, resourceData, resources, response, results, type, typeName, _j, _k, _l, _len1, _len2, _len3, _ref1, _ref2, _ref3, _ref4;
+    var headers, linkedResources, resourceData, resources, response, results, typeName, _j, _k, _l, _len1, _len2, _len3, _ref1, _ref2, _ref3, _ref4;
     response = (function() {
       try {
         return JSON.parse(request.responseText);
@@ -194,12 +194,12 @@ module.exports = JSONAPIClient = (function() {
     }
     if ('linked' in response) {
       _ref1 = response.linked;
-      for (type in _ref1) {
-        linked = _ref1[type];
-        _ref2 = [].concat(linked);
+      for (typeName in _ref1) {
+        linkedResources = _ref1[typeName];
+        _ref2 = [].concat(linkedResources);
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
           resourceData = _ref2[_j];
-          this.type(type).create(resourceData, headers);
+          this.type(typeName).create(resourceData, headers);
         }
       }
     }
@@ -477,24 +477,26 @@ module.exports = Resource = (function(_super) {
 
   Resource.prototype._headers = null;
 
-  function Resource(_type, _headers) {
+  function Resource(_type) {
     this._type = _type;
-    this._headers = _headers;
     Resource.__super__.constructor.call(this, null);
-    if (!((this._type != null) && (this._headers != null))) {
+    if (this._headers == null) {
+      this._headers = {};
+    }
+    if (this._type == null) {
       throw new Error('Don\'t call the Resource constructor directly, use `client.type("things").create({});`');
     }
     this._type.emit('change');
   }
 
   Resource.prototype.update = function() {
-    var changesMade;
-    changesMade = Resource.__super__.update.apply(this, arguments);
-    if (changesMade && this.id) {
+    var value;
+    value = Resource.__super__.update.apply(this, arguments);
+    if (this.id) {
       this._type._cache[this.id] = this;
-      this._type.emit('change');
     }
-    return changesMade;
+    this._type.emit('change');
+    return value;
   };
 
   Resource.prototype.save = function() {
@@ -676,24 +678,27 @@ module.exports = Type = (function(_super) {
   }
 
   Type.prototype.create = function(data, headers) {
-    var resource;
+    var resource, _ref;
     if (data == null) {
       data = {};
     }
     if (headers == null) {
       headers = {};
     }
-    resource = this._cache[data.id];
-    if (resource != null) {
-      resource._headers = headers;
+    if (data.type && data.type !== this._name) {
+      return (_ref = this._client.type(data.type)).create.apply(_ref, arguments);
     } else {
-      resource = new this.Resource(this, headers);
+      resource = this._cache[data.id];
+      if (resource == null) {
+        resource = new this.Resource(this);
+      }
+      resource._headers = headers;
+      resource.update(data);
+      if (resource.id) {
+        resource._changedKeys.splice(0);
+      }
+      return resource;
     }
-    resource.update(data);
-    if (resource.id) {
-      resource._changedKeys.splice(0);
-    }
-    return resource;
   };
 
   Type.prototype.get = function() {

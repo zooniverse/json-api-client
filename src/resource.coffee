@@ -10,18 +10,19 @@ module.exports = class Resource extends Model
   _type: null
   _headers: null
 
-  constructor: (@_type, @_headers) ->
+  constructor: (@_type) ->
     super null
-    unless @_type? and @_headers?
+    @_headers ?= {}
+    unless @_type?
       throw new Error 'Don\'t call the Resource constructor directly, use `client.type("things").create({});`'
     @_type.emit 'change'
 
   update: ->
-    changesMade = super
-    if changesMade and @id
+    value = super
+    if @id
       @_type._cache[@id] = this
-      @_type.emit 'change'
-    changesMade
+    @_type.emit 'change'
+    value
 
   save: ->
     payload = {}

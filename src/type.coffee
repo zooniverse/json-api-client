@@ -18,15 +18,16 @@ module.exports = class Type extends Emitter
       throw new Error 'Don\'t call the Type constructor directly, use `client.type("things");`'
 
   create: (data = {}, headers = {}) ->
-    resource = @_cache[data.id]
-    if resource?
-      resource._headers = headers
+    if data.type and data.type isnt @_name
+      @_client.type(data.type).create arguments...
     else
-      resource = new @Resource this, headers
-    resource.update data
-    if resource.id
-      resource._changedKeys.splice 0
-    resource
+      resource = @_cache[data.id]
+      resource ?= new @Resource this
+      resource._headers = headers
+      resource.update data
+      if resource.id
+        resource._changedKeys.splice 0
+      resource
 
   get: ->
     if typeof arguments[0] is 'string'

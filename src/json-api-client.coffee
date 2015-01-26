@@ -39,9 +39,9 @@ module.exports = class JSONAPIClient
       @_handleLinks response.links
 
     if 'linked' of response
-      for type, linked of response.linked
-        for resourceData in [].concat linked
-          @type(type).create resourceData, headers
+      for typeName, linkedResources of response.linked
+        for resourceData in [].concat linkedResources
+          @type(typeName).create resourceData, headers
 
     results = []
     if 'data' of response
