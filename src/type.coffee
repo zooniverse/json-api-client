@@ -19,14 +19,14 @@ module.exports = class Type extends Emitter
 
   create: (data = {}, headers = {}, meta = {}) ->
     if data.type and data.type isnt @_name
+      # The `type` specified by the resource trumps whatever you tried to create it as.
       @_client.type(data.type).create arguments...
     else
-      resource = @_cache[data.id]
-      resource ?= new @Resource this
+      resource = @_cache[data.id] ? new @Resource this
       resource._headers = headers
       resource._meta = meta
       resource.update data
-      if resource.id
+      if resource is @_cache[data.id]
         resource._changedKeys.splice 0
       resource
 

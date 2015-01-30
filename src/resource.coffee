@@ -12,11 +12,9 @@ module.exports = class Resource extends Model
   _meta: null
 
   constructor: (@_type) ->
-    super null
-    @_headers ?= {}
-    @_meta ?= {}
     unless @_type?
       throw new Error 'Don\'t call the Resource constructor directly, use `client.type("things").create({});`'
+    super null
     @_type.emit 'change'
 
   getRequestMeta: (key) ->
@@ -24,9 +22,9 @@ module.exports = class Resource extends Model
 
   update: ->
     value = super
-    if @id
+    if @id and @_type._cache[@id] isnt this
       @_type._cache[@id] = this
-    @_type.emit 'change'
+      @_type.emit 'change'
     value
 
   save: ->
@@ -42,8 +40,12 @@ module.exports = class Resource extends Model
       @_type._client.post @_type._getURL(), payload
 
     save.then ([result]) =>
+      unless result is this
+        @update result
+        @_changedKeys.splice 0
+        result.destroy()
       @emit 'save'
-      result
+      this
 
   getChangesSinceSave: ->
     changes = {}
@@ -77,6 +79,7 @@ module.exports = class Resource extends Model
     deletion.then =>
       @emit 'delete'
       @_type.emit 'change'
+      @destroy()
       null
 
   link: (name) ->

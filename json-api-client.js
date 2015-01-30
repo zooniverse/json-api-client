@@ -481,16 +481,10 @@ module.exports = Resource = (function(_super) {
 
   function Resource(_type) {
     this._type = _type;
-    Resource.__super__.constructor.call(this, null);
-    if (this._headers == null) {
-      this._headers = {};
-    }
-    if (this._meta == null) {
-      this._meta = {};
-    }
     if (this._type == null) {
       throw new Error('Don\'t call the Resource constructor directly, use `client.type("things").create({});`');
     }
+    Resource.__super__.constructor.call(this, null);
     this._type.emit('change');
   }
 
@@ -501,10 +495,10 @@ module.exports = Resource = (function(_super) {
   Resource.prototype.update = function() {
     var value;
     value = Resource.__super__.update.apply(this, arguments);
-    if (this.id) {
+    if (this.id && this._type._cache[this.id] !== this) {
       this._type._cache[this.id] = this;
+      this._type.emit('change');
     }
-    this._type.emit('change');
     return value;
   };
 
@@ -517,8 +511,13 @@ module.exports = Resource = (function(_super) {
       return function(_arg) {
         var result;
         result = _arg[0];
+        if (result !== _this) {
+          _this.update(result);
+          _this._changedKeys.splice(0);
+          result.destroy();
+        }
         _this.emit('save');
-        return result;
+        return _this;
       };
     })(this));
   };
@@ -558,6 +557,7 @@ module.exports = Resource = (function(_super) {
       return function() {
         _this.emit('delete');
         _this._type.emit('change');
+        _this.destroy();
         return null;
       };
     })(this));
@@ -687,7 +687,7 @@ module.exports = Type = (function(_super) {
   }
 
   Type.prototype.create = function(data, headers, meta) {
-    var resource, _ref;
+    var resource, _ref, _ref1;
     if (data == null) {
       data = {};
     }
@@ -700,14 +700,11 @@ module.exports = Type = (function(_super) {
     if (data.type && data.type !== this._name) {
       return (_ref = this._client.type(data.type)).create.apply(_ref, arguments);
     } else {
-      resource = this._cache[data.id];
-      if (resource == null) {
-        resource = new this.Resource(this);
-      }
+      resource = (_ref1 = this._cache[data.id]) != null ? _ref1 : new this.Resource(this);
       resource._headers = headers;
       resource._meta = meta;
       resource.update(data);
-      if (resource.id) {
+      if (resource === this._cache[data.id]) {
         resource._changedKeys.splice(0);
       }
       return resource;
