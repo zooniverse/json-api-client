@@ -376,7 +376,6 @@ module.exports = function() {
 
 },{}],5:[function(_dereq_,module,exports){
 var Emitter, Model, mergeInto,
-  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice,
@@ -393,12 +392,9 @@ module.exports = Model = (function(_super) {
 
   Model.prototype._changedKeys = null;
 
-  Model.prototype._willChangeTimeout = NaN;
-
   function Model() {
     var configs;
     configs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-    this._triggerBatchChange = __bind(this._triggerBatchChange, this);
     Model.__super__.constructor.apply(this, arguments);
     this._changedKeys = [];
     mergeInto.apply(null, [this].concat(__slice.call(configs)));
@@ -406,31 +402,33 @@ module.exports = Model = (function(_super) {
   }
 
   Model.prototype.update = function(changeSet) {
-    var key, value;
+    var key, value, _i, _len, _ref;
     if (changeSet == null) {
       changeSet = {};
     }
-    for (key in changeSet) {
-      if (!__hasProp.call(changeSet, key)) continue;
-      value = changeSet[key];
-      if (__indexOf.call(this._changedKeys, key) < 0) {
-        this._changedKeys.push(key);
+    if (typeof changeSet === 'string') {
+      for (_i = 0, _len = arguments.length; _i < _len; _i++) {
+        key = arguments[_i];
+        if (__indexOf.call(this._changedKeys, key) < 0) {
+          (_ref = this._changedKeys).push.apply(_ref, arguments);
+        }
       }
-      if (typeof value === 'function') {
-        value = value();
+    } else {
+      for (key in changeSet) {
+        if (!__hasProp.call(changeSet, key)) continue;
+        value = changeSet[key];
+        if (__indexOf.call(this._changedKeys, key) < 0) {
+          this._changedKeys.push(key);
+        }
+        if (value === void 0) {
+          delete this.key;
+        } else {
+          this[key] = value;
+        }
       }
-      this[key] = value;
     }
-    if (!isNaN(this._willChangeTimeout)) {
-      clearTimeout(this._willChangeTimeout);
-    }
-    this._willChangeTimeout = setTimeout(this._triggerBatchChange);
-    return this;
-  };
-
-  Model.prototype._triggerBatchChange = function() {
     this.emit('change');
-    return this._willChangeTimeout = NaN;
+    return this;
   };
 
   Model.prototype.hasUnsavedChanges = function() {
