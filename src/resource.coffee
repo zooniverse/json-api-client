@@ -87,11 +87,11 @@ module.exports = class Resource extends Model
     if link?
       @_getLink name, link
     else
-      throw new Error "No link '#{name}' defined for #{@_type.name} #{@id}"
+      throw new Error "No link '#{name}' defined for #{@_type._name}/#{@id}"
 
   _getLink: (name, link) ->
     if typeof link is 'string' or Array.isArray link
-      {href, type} = @_type._links[name]
+      {href, type} = @_type._links?[name] ? {}
 
       if href?
         @_type._client.get(@_applyHREF href).then (resources) =>
@@ -105,7 +105,7 @@ module.exports = class Resource extends Model
         type.get link
 
       else
-        throw new Error "No HREF or type for link '#{name}' of #{@_type.name} #{@id}"
+        throw new Error "No HREF or type for link '#{name}' of #{@_type._name}/#{@id}"
 
     else # It's a collection object.
       {id, ids, type, href} = link
@@ -121,7 +121,7 @@ module.exports = class Resource extends Model
             resources
 
       else
-        throw new Error "No HREF, type, or IDs for link '#{name}' of #{@_type.name} #{@id}"
+        throw new Error "No HREF, type, or IDs for link '#{name}' of #{@_type._name}/#{@id}"
 
   _applyHREF: (href) ->
     context = {}
