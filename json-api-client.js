@@ -477,12 +477,15 @@ module.exports = Resource = (function(_super) {
 
   Resource.prototype._meta = null;
 
+  Resource.prototype._linksCache = null;
+
   function Resource(_type) {
     this._type = _type;
     if (this._type == null) {
       throw new Error('Don\'t call the Resource constructor directly, use `client.type("things").create({});`');
     }
     Resource.__super__.constructor.call(this, null);
+    this._linksCache = {};
     this._type.emit('change');
     this.emit('create');
   }
@@ -562,15 +565,26 @@ module.exports = Resource = (function(_super) {
     })(this));
   };
 
-  Resource.prototype.get = function(name) {
-    var link, _ref;
-    link = (_ref = this.links) != null ? _ref[name] : void 0;
-    if (typeof link === 'string' || Array.isArray(link)) {
-      return this._getLinkByIDs(name, link);
-    } else if (link != null) {
-      return this._getLinkByObject(name, link);
+  Resource.prototype.get = function(name, _arg) {
+    var link, skipCache, value, _ref;
+    skipCache = (_arg != null ? _arg : {}).skipCache;
+    if ((this._linksCache[name] != null) && !skipCache) {
+      return this._linksCache[name];
     } else {
-      throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
+      link = (_ref = this.links) != null ? _ref[name] : void 0;
+      value = (function() {
+        if (typeof link === 'string' || Array.isArray(link)) {
+          return this._getLinkByIDs(name, link);
+        } else if (link != null) {
+          return this._getLinkByObject(name, link);
+        } else {
+          throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
+        }
+      }).call(this);
+      if (!skipCache) {
+        this._linksCache[name] = value;
+      }
+      return value;
     }
   };
 

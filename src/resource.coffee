@@ -10,11 +10,13 @@ module.exports = class Resource extends Model
   _type: null
   _headers: null
   _meta: null
+  _linksCache: null
 
   constructor: (@_type) ->
     unless @_type?
       throw new Error 'Don\'t call the Resource constructor directly, use `client.type("things").create({});`'
     super null
+    @_linksCache = {}
     @_type.emit 'change'
     @emit 'create'
 
@@ -83,14 +85,23 @@ module.exports = class Resource extends Model
       @destroy()
       null
 
-  get: (name) ->
-    link = @links?[name]
-    if typeof link is 'string' or Array.isArray link # It's an ID or IDs.
-      @_getLinkByIDs name, link
-    else if link? # It's a collection object.
-      @_getLinkByObject name, link
+  get: (name, {skipCache} = {}) ->
+    if @_linksCache[name]? and not skipCache
+      @_linksCache[name]
     else
-      throw new Error "No link '#{name}' defined for #{@_type._name}##{@id}"
+      link = @links?[name]
+
+      value = if typeof link is 'string' or Array.isArray link # It's an ID or IDs.
+        @_getLinkByIDs name, link
+      else if link? # It's a collection object.
+        @_getLinkByObject name, link
+      else
+        throw new Error "No link '#{name}' defined for #{@_type._name}##{@id}"
+
+      unless skipCache
+        @_linksCache[name] = value
+
+      value
 
   _getLinkByIDs: (name, idOrIDs) ->
     if @_type._links[name]?
