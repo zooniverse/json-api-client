@@ -16,6 +16,7 @@ module.exports = class Resource extends Model
       throw new Error 'Don\'t call the Resource constructor directly, use `client.type("things").create({});`'
     super null
     @_type.emit 'change'
+    @emit 'create'
 
   getRequestMeta: (key) ->
     @_meta[key ? @_type._name]
@@ -82,46 +83,39 @@ module.exports = class Resource extends Model
       @destroy()
       null
 
-  link: (name) ->
-    link = @links?[name] ? @_type._links[name]
-    if link?
-      @_getLink name, link
+  get: (name) ->
+    link = @links?[name]
+    if typeof link is 'string' or Array.isArray link # It's an ID or IDs.
+      @_getLinkByIDs name, link
+    else if link? # It's a collection object.
+      @_getLinkByObject name, link
     else
-      throw new Error "No link '#{name}' defined for #{@_type._name}/#{@id}"
+      throw new Error "No link '#{name}' defined for #{@_type._name}##{@id}"
 
-  _getLink: (name, link) ->
-    if typeof link is 'string' or Array.isArray link
-      {href, type} = @_type._links?[name] ? {}
+  _getLinkByIDs: (name, idOrIDs) ->
+    if @_type._links[name]?
+      {type, href} = @_type._links[name]
 
-      if href?
-        @_type._client.get(@_applyHREF href).then (resources) =>
-          if typeof @links[name] is 'string'
-            resources[0]
-          else
-            resources
-
-      else if type?
-        type = @_type._client._types[type]
-        type.get link
-
-      else
-        throw new Error "No HREF or type for link '#{name}' of #{@_type._name}/#{@id}"
-
-    else # It's a collection object.
-      {id, ids, type, href} = link
-
-      if (id? or ids?) and type?
-        @_type._client.type(type).get id ? ids
-
+      if type?
+        @_type._client.type(type).get idOrIDs
       else if href?
-        @_type._client.get(@_applyHREF href).then (resources) =>
-          if typeof @links[name] is 'string'
+        @_type._client.get(@_applyHREF href).then (resources) ->
+          if typeof idOrIDs is 'string'
             resources[0]
-          else
+          else # It's an array.
             resources
-
       else
-        throw new Error "No HREF, type, or IDs for link '#{name}' of #{@_type._name}/#{@id}"
+        throw new Error "No type or href for link '#{name}' of #{@_type._name}##{@id ? '?'}"
+    else
+      throw new Error "No link '#{name}' for #{@_type._name}"
+
+  _getLinkByObject: (name, {id, ids, type, href}) ->
+    if (id? or ids?) and type?
+      @_type._client.type(type).get id ? ids
+    else if href?
+      @_type._client.get @_applyHREF href
+    else
+      throw new Error "No type and ID(s) or href for link '#{name}' of #{@_type._name}##{@id ? '?'}"
 
   _applyHREF: (href) ->
     context = {}
@@ -146,6 +140,6 @@ module.exports = class Resource extends Model
   _getURL: ->
     @href || @_type._getURL @id, arguments...
 
-  attr: ->
-    console.warn 'Use Resource::link, not ::attr', arguments...
-    @link arguments...
+  link: ->
+    console.warn 'Use Resource::get, not ::link', arguments...
+    @get arguments...

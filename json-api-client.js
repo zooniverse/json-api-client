@@ -484,6 +484,7 @@ module.exports = Resource = (function(_super) {
     }
     Resource.__super__.constructor.call(this, null);
     this._type.emit('change');
+    this.emit('create');
   }
 
   Resource.prototype.getRequestMeta = function(key) {
@@ -561,53 +562,49 @@ module.exports = Resource = (function(_super) {
     })(this));
   };
 
-  Resource.prototype.link = function(name) {
-    var link, _ref, _ref1;
-    link = (_ref = (_ref1 = this.links) != null ? _ref1[name] : void 0) != null ? _ref : this._type._links[name];
-    if (link != null) {
-      return this._getLink(name, link);
+  Resource.prototype.get = function(name) {
+    var link, _ref;
+    link = (_ref = this.links) != null ? _ref[name] : void 0;
+    if (typeof link === 'string' || Array.isArray(link)) {
+      return this._getLinkByIDs(name, link);
+    } else if (link != null) {
+      return this._getLinkByObject(name, link);
     } else {
-      throw new Error("No link '" + name + "' defined for " + this._type._name + "/" + this.id);
+      throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
     }
   };
 
-  Resource.prototype._getLink = function(name, link) {
-    var href, id, ids, type, _ref, _ref1, _ref2;
-    if (typeof link === 'string' || Array.isArray(link)) {
-      _ref2 = (_ref = (_ref1 = this._type._links) != null ? _ref1[name] : void 0) != null ? _ref : {}, href = _ref2.href, type = _ref2.type;
-      if (href != null) {
-        return this._type._client.get(this._applyHREF(href)).then((function(_this) {
-          return function(resources) {
-            if (typeof _this.links[name] === 'string') {
-              return resources[0];
-            } else {
-              return resources;
-            }
-          };
-        })(this));
-      } else if (type != null) {
-        type = this._type._client._types[type];
-        return type.get(link);
+  Resource.prototype._getLinkByIDs = function(name, idOrIDs) {
+    var href, type, _ref, _ref1;
+    if (this._type._links[name] != null) {
+      _ref = this._type._links[name], type = _ref.type, href = _ref.href;
+      if (type != null) {
+        return this._type._client.type(type).get(idOrIDs);
+      } else if (href != null) {
+        return this._type._client.get(this._applyHREF(href)).then(function(resources) {
+          if (typeof idOrIDs === 'string') {
+            return resources[0];
+          } else {
+            return resources;
+          }
+        });
       } else {
-        throw new Error("No HREF or type for link '" + name + "' of " + this._type._name + "/" + this.id);
+        throw new Error("No type or href for link '" + name + "' of " + this._type._name + "#" + ((_ref1 = this.id) != null ? _ref1 : '?'));
       }
     } else {
-      id = link.id, ids = link.ids, type = link.type, href = link.href;
-      if (((id != null) || (ids != null)) && (type != null)) {
-        return this._type._client.type(type).get(id != null ? id : ids);
-      } else if (href != null) {
-        return this._type._client.get(this._applyHREF(href)).then((function(_this) {
-          return function(resources) {
-            if (typeof _this.links[name] === 'string') {
-              return resources[0];
-            } else {
-              return resources;
-            }
-          };
-        })(this));
-      } else {
-        throw new Error("No HREF, type, or IDs for link '" + name + "' of " + this._type._name + "/" + this.id);
-      }
+      throw new Error("No link '" + name + "' for " + this._type._name);
+    }
+  };
+
+  Resource.prototype._getLinkByObject = function(name, _arg) {
+    var href, id, ids, type, _ref;
+    id = _arg.id, ids = _arg.ids, type = _arg.type, href = _arg.href;
+    if (((id != null) || (ids != null)) && (type != null)) {
+      return this._type._client.type(type).get(id != null ? id : ids);
+    } else if (href != null) {
+      return this._type._client.get(this._applyHREF(href));
+    } else {
+      throw new Error("No type and ID(s) or href for link '" + name + "' of " + this._type._name + "#" + ((_ref = this.id) != null ? _ref : '?'));
     }
   };
 
@@ -638,9 +635,9 @@ module.exports = Resource = (function(_super) {
     return this.href || (_ref = this._type)._getURL.apply(_ref, [this.id].concat(__slice.call(arguments)));
   };
 
-  Resource.prototype.attr = function() {
-    console.warn.apply(console, ['Use Resource::link, not ::attr'].concat(__slice.call(arguments)));
-    return this.link.apply(this, arguments);
+  Resource.prototype.link = function() {
+    console.warn.apply(console, ['Use Resource::get, not ::link'].concat(__slice.call(arguments)));
+    return this.get.apply(this, arguments);
   };
 
   return Resource;
