@@ -402,11 +402,12 @@ module.exports = Model = (function(_super) {
   }
 
   Model.prototype.update = function(changeSet) {
-    var key, value, _i, _len, _ref;
+    var base, key, lastKey, path, rootKey, value, _i, _len, _ref;
     if (changeSet == null) {
       changeSet = {};
     }
     if (typeof changeSet === 'string') {
+      console.warn('You can now update dotted-path keys, so you probably don\'t need to call Resource::update on strings anymore.');
       for (_i = 0, _len = arguments.length; _i < _len; _i++) {
         key = arguments[_i];
         if (__indexOf.call(this._changedKeys, key) < 0) {
@@ -417,13 +418,22 @@ module.exports = Model = (function(_super) {
       for (key in changeSet) {
         if (!__hasProp.call(changeSet, key)) continue;
         value = changeSet[key];
-        if (__indexOf.call(this._changedKeys, key) < 0) {
-          this._changedKeys.push(key);
+        path = key.split('.');
+        rootKey = path[0];
+        base = this;
+        while (path.length !== 1) {
+          base = base[path.shift()];
         }
+        lastKey = path.shift();
         if (value === void 0) {
-          delete this.key;
+          delete base[lastKey];
+        } else if (typeof value === 'function') {
+          value.call(base[lastKey]);
         } else {
-          this[key] = value;
+          base[key] = value;
+        }
+        if (__indexOf.call(this._changedKeys, rootKey) < 0) {
+          this._changedKeys.push(rootKey);
         }
       }
     }
