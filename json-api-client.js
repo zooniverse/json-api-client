@@ -469,7 +469,7 @@ PLACEHOLDERS_PATTERN = /{(.+?)}/g;
 module.exports = Resource = (function(_super) {
   __extends(Resource, _super);
 
-  Resource.prototype._ignoredKeys = Model.prototype._ignoredKeys.concat(['id', 'type', 'href', 'created_at', 'updated_at']);
+  Resource.prototype._ignoredKeys = Model.prototype._ignoredKeys.concat(['id', 'type', 'href']);
 
   Resource.prototype._type = null;
 

@@ -5,7 +5,7 @@ mergeInto = require './merge-into'
 PLACEHOLDERS_PATTERN = /{(.+?)}/g
 
 module.exports = class Resource extends Model
-  _ignoredKeys: Model::_ignoredKeys.concat ['id', 'type', 'href', 'created_at', 'updated_at']
+  _ignoredKeys: Model::_ignoredKeys.concat ['id', 'type', 'href']
 
   _type: null
   _headers: null
