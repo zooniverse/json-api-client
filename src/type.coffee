@@ -8,12 +8,12 @@ module.exports = class Type extends Emitter
   _client: null
 
   _links: null # Resource link definitions
-  _cache: null
+  _resourcesCache: null
 
   constructor: (@_name, @_client) ->
     super
     @_links = {}
-    @_cache = {}
+    @_resourcesCache = {}
     unless @_name and @_client?
       throw new Error 'Don\'t call the Type constructor directly, use `client.type("things");`'
 
@@ -22,11 +22,11 @@ module.exports = class Type extends Emitter
       # The `type` specified by the resource trumps whatever you tried to create it as.
       @_client.type(data.type).create arguments...
     else
-      resource = @_cache[data.id] ? new @Resource this
+      resource = @_resourcesCache[data.id] ? new @Resource this
       resource._headers = headers
       resource._meta = meta
       resource.update data
-      if resource is @_cache[data.id]
+      if resource is @_resourcesCache[data.id]
         resource._changedKeys.splice 0
       resource
 
@@ -43,7 +43,7 @@ module.exports = class Type extends Emitter
       resource
 
   _getByIDs: (ids, otherArgs...) ->
-    inCache = (id for id in ids when id of @_cache and otherArgs.length is 0)
+    inCache = (id for id in ids when id of @_resourcesCache and otherArgs.length is 0)
     toFetch = (id for id in ids when id not in inCache)
     fetch = if toFetch.length is 0
       Promise.resolve []
@@ -54,7 +54,7 @@ module.exports = class Type extends Emitter
       fetchedByID = {}
       for resource in fetched
         fetchedByID[resource.id] = resource
-      (fetchedByID[id] ? @_cache[id] for id in ids)
+      (fetchedByID[id] ? @_resourcesCache[id] for id in ids)
 
   _getByQuery: (query, otherArgs...) ->
     @_client.get @_getURL(), query, otherArgs...
@@ -63,5 +63,5 @@ module.exports = class Type extends Emitter
     ['', @_name, arguments...].join '/'
 
   createResource: ->
-    console.warn 'Use Type::create, not ::createResource', arguments...
+    console?.warn 'Use Type::create, not ::createResource', arguments...
     @create arguments...

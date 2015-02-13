@@ -153,12 +153,12 @@ module.exports = JSONAPIClient = (function() {
 
   JSONAPIClient.prototype.headers = null;
 
-  JSONAPIClient.prototype._types = null;
+  JSONAPIClient.prototype._typesCache = null;
 
   function JSONAPIClient(root, headers) {
     this.root = root;
     this.headers = headers != null ? headers : {};
-    this._types = {};
+    this._typesCache = {};
   }
 
   JSONAPIClient.prototype.request = function(method, url, payload, headers) {
@@ -276,14 +276,16 @@ module.exports = JSONAPIClient = (function() {
 
   JSONAPIClient.prototype.type = function(name) {
     var _base;
-    if ((_base = this._types)[name] == null) {
+    if ((_base = this._typesCache)[name] == null) {
       _base[name] = new Type(name, this);
     }
-    return this._types[name];
+    return this._typesCache[name];
   };
 
   JSONAPIClient.prototype.createType = function() {
-    console.warn.apply(console, ['Use JSONAPIClient::type, not ::createType'].concat(__slice.call(arguments)));
+    if (typeof console !== "undefined" && console !== null) {
+      console.warn.apply(console, ['Use JSONAPIClient::type, not ::createType'].concat(__slice.call(arguments)));
+    }
     return this.type.apply(this, arguments);
   };
 
@@ -407,7 +409,9 @@ module.exports = Model = (function(_super) {
       changeSet = {};
     }
     if (typeof changeSet === 'string') {
-      console.warn('You can now update dotted-path keys, so you probably don\'t need to call Resource::update on strings anymore.');
+      if (typeof console !== "undefined" && console !== null) {
+        console.warn('You can now update dotted-path keys, so you probably don\'t need to call Resource::update on strings anymore.');
+      }
       for (_i = 0, _len = arguments.length; _i < _len; _i++) {
         key = arguments[_i];
         if (__indexOf.call(this._changedKeys, key) < 0) {
@@ -505,8 +509,8 @@ Resource = (function(_super) {
   Resource.prototype.update = function() {
     var value;
     value = Resource.__super__.update.apply(this, arguments);
-    if (this.id && this._type._cache[this.id] !== this) {
-      this._type._cache[this.id] = this;
+    if (this.id && this._type._resourcesCache[this.id] !== this) {
+      this._type._resourcesCache[this.id] = this;
       this._type.emit('change');
     }
     return value;
@@ -554,7 +558,7 @@ Resource = (function(_super) {
   Resource.prototype.uncache = function() {
     if (this.id) {
       this.emit('uncache');
-      return delete this._type._cache[this.id];
+      return delete this._type._resourcesCache[this.id];
     } else {
       throw new Error('Can\'t uncache a resource with no ID');
     }
@@ -574,39 +578,49 @@ Resource = (function(_super) {
   };
 
   Resource.prototype.get = function(name, _arg) {
-    var link, result, skipCache, _ref;
+    var link, result, skipCache, typeLink, _ref;
     skipCache = (_arg != null ? _arg : {}).skipCache;
-    return new ResourcePromise(name in this ? Promise.resolve(this[name]) : (this._linksCache[name] != null) && !skipCache ? this._linksCache[name] : (link = (_ref = this.links) != null ? _ref[name] : void 0, result = (function() {
-      if (typeof link === 'string' || Array.isArray(link)) {
-        return this._getLinkByIDs(name, link);
-      } else if (link != null) {
-        return this._getLinkByObject(name, link);
-      } else {
-        throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
-      }
-    }).call(this), result.then((function(_this) {
-      return function() {
-        return _this._linksCache[name] = result;
-      };
-    })(this)), result));
+    if (name in this) {
+      return new ResourcePromise(Promise.resolve(this[name]));
+    } else if ((this._linksCache[name] != null) && !skipCache) {
+      return this._linksCache[name];
+    } else {
+      link = (_ref = this.links) != null ? _ref[name] : void 0;
+      typeLink = this._type._links[name];
+      result = (function() {
+        if (typeof link === 'string' || Array.isArray(link)) {
+          return this._getLinkByIDs(name, link, typeLink);
+        } else if ((link != null) || (typeLink != null)) {
+          return this._getLinkByObject(name, link != null ? link : typeLink);
+        } else {
+          throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
+        }
+      }).call(this);
+      result.then((function(_this) {
+        return function() {
+          return _this._linksCache[name] = result;
+        };
+      })(this));
+      return result;
+    }
   };
 
-  Resource.prototype._getLinkByIDs = function(name, idOrIDs) {
-    var href, type, _ref, _ref1;
-    if (this._type._links[name] != null) {
-      _ref = this._type._links[name], type = _ref.type, href = _ref.href;
+  Resource.prototype._getLinkByIDs = function(name, idOrIDs, typeLink) {
+    var href, type, _ref;
+    if (typeLink != null) {
+      type = typeLink.type, href = typeLink.href;
       if (type != null) {
         return this._type._client.type(type).get(idOrIDs);
       } else if (href != null) {
-        return this._type._client.get(this._applyHREF(href)).then(function(resources) {
+        return new ResourcePromise(this._type._client.get(this._applyHREF(href)).then(function(resources) {
           if (typeof idOrIDs === 'string') {
             return resources[0];
           } else {
             return resources;
           }
-        });
+        }));
       } else {
-        throw new Error("No type or href for link '" + name + "' of " + this._type._name + "#" + ((_ref1 = this.id) != null ? _ref1 : '?'));
+        throw new Error("No type or href for link '" + name + "' of " + this._type._name + "#" + ((_ref = this.id) != null ? _ref : '?'));
       }
     } else {
       throw new Error("No link '" + name + "' for " + this._type._name);
@@ -653,7 +667,9 @@ Resource = (function(_super) {
   };
 
   Resource.prototype.link = function() {
-    console.warn.apply(console, ['Use Resource::get, not ::link'].concat(__slice.call(arguments)));
+    if (typeof console !== "undefined" && console !== null) {
+      console.warn.apply(console, ['Use Resource::get, not ::link'].concat(__slice.call(arguments)));
+    }
     return this.get.apply(this, arguments);
   };
 
@@ -666,25 +682,31 @@ ResourcePromise = (function() {
 
   ResourcePromise.prototype._promise = null;
 
-  ResourcePromise.prototype._parent = null;
-
-  function ResourcePromise(_promise, _parent) {
+  function ResourcePromise(_promise) {
     this._promise = _promise;
-    this._parent = _parent;
+    if (!(this._promise instanceof Promise)) {
+      throw new Error('ResourcePromise requires a real promise instance');
+    }
   }
 
   ResourcePromise.prototype.then = function() {
     var _ref;
-    return new this.constructor((_ref = this._promise).then.apply(_ref, arguments), this._promise);
+    return (_ref = this._promise).then.apply(_ref, arguments);
   };
 
   ResourcePromise.prototype["catch"] = function() {
     var _ref;
-    return new this.constructor((_ref = this._promise)["catch"].apply(_ref, arguments), this._promise);
+    return (_ref = this._promise)["catch"].apply(_ref, arguments);
   };
 
-  ResourcePromise.prototype.end = function() {
-    return new this.constructor(this._parent);
+  ResourcePromise.prototype.index = function(index) {
+    this._promise = this._promise.then(function(value) {
+      if (index < 0) {
+        index = value.length - index;
+      }
+      return value[index];
+    });
+    return this;
   };
 
   _ref = Resource.prototype;
@@ -693,27 +715,33 @@ ResourcePromise = (function() {
     if (typeof method === 'function' && !(methodName in ResourcePromise.prototype)) {
       (function(methodName, method) {
         return ResourcePromise.prototype[methodName] = function() {
-          var args, outPromise;
+          var args;
           args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-          outPromise = this._promise.then(function(promisedValue) {
-            var resource, results;
-            results = (function() {
-              var _i, _len, _ref1, _results;
-              _ref1 = [].concat(promisedValue);
-              _results = [];
-              for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-                resource = _ref1[_i];
-                _results.push(method.apply(resource, args));
+          this._promise = this._promise.then((function(_this) {
+            return function(promisedValue) {
+              var resource, result, results;
+              results = (function() {
+                var _i, _len, _ref1, _results;
+                _ref1 = [].concat(promisedValue);
+                _results = [];
+                for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+                  resource = _ref1[_i];
+                  result = method.apply(resource, args);
+                  if (result instanceof this.constructor) {
+                    result = result._promise;
+                  }
+                  _results.push(result);
+                }
+                return _results;
+              }).call(_this);
+              if (Array.isArray(promisedValue)) {
+                return Promise.all(results);
+              } else {
+                return results[0];
               }
-              return _results;
-            })();
-            if (Array.isArray(promisedValue)) {
-              return Promise.all(results);
-            } else {
-              return results[0];
-            }
-          });
-          return new this.constructor(outPromise, this._promise);
+            };
+          })(this));
+          return this;
         };
       })(methodName, method);
     }
@@ -751,14 +779,14 @@ module.exports = Type = (function(_super) {
 
   Type.prototype._links = null;
 
-  Type.prototype._cache = null;
+  Type.prototype._resourcesCache = null;
 
   function Type(_name, _client) {
     this._name = _name;
     this._client = _client;
     Type.__super__.constructor.apply(this, arguments);
     this._links = {};
-    this._cache = {};
+    this._resourcesCache = {};
     if (!(this._name && (this._client != null))) {
       throw new Error('Don\'t call the Type constructor directly, use `client.type("things");`');
     }
@@ -778,11 +806,11 @@ module.exports = Type = (function(_super) {
     if (data.type && data.type !== this._name) {
       return (_ref = this._client.type(data.type)).create.apply(_ref, arguments);
     } else {
-      resource = (_ref1 = this._cache[data.id]) != null ? _ref1 : new this.Resource(this);
+      resource = (_ref1 = this._resourcesCache[data.id]) != null ? _ref1 : new this.Resource(this);
       resource._headers = headers;
       resource._meta = meta;
       resource.update(data);
-      if (resource === this._cache[data.id]) {
+      if (resource === this._resourcesCache[data.id]) {
         resource._changedKeys.splice(0);
       }
       return resource;
@@ -811,7 +839,7 @@ module.exports = Type = (function(_super) {
       _results = [];
       for (_i = 0, _len = ids.length; _i < _len; _i++) {
         id = ids[_i];
-        if (id in this._cache && otherArgs.length === 0) {
+        if (id in this._resourcesCache && otherArgs.length === 0) {
           _results.push(id);
         }
       }
@@ -840,7 +868,7 @@ module.exports = Type = (function(_super) {
         _results = [];
         for (_j = 0, _len1 = ids.length; _j < _len1; _j++) {
           id = ids[_j];
-          _results.push((_ref1 = fetchedByID[id]) != null ? _ref1 : _this._cache[id]);
+          _results.push((_ref1 = fetchedByID[id]) != null ? _ref1 : _this._resourcesCache[id]);
         }
         return _results;
       };
@@ -858,7 +886,9 @@ module.exports = Type = (function(_super) {
   };
 
   Type.prototype.createResource = function() {
-    console.warn.apply(console, ['Use Type::create, not ::createResource'].concat(__slice.call(arguments)));
+    if (typeof console !== "undefined" && console !== null) {
+      console.warn.apply(console, ['Use Type::create, not ::createResource'].concat(__slice.call(arguments)));
+    }
     return this.create.apply(this, arguments);
   };
 

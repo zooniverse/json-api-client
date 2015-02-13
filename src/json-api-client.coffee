@@ -15,10 +15,10 @@ module.exports = class JSONAPIClient
   root: '/'
   headers: null
 
-  _types: null # Types that have been defined
+  _typesCache: null # Types that have been defined
 
   constructor: (@root, @headers = {}) ->
-    @_types = {}
+    @_typesCache = {}
 
   request: (method, url, payload, headers) ->
     fullURL = @root + url
@@ -83,11 +83,11 @@ module.exports = class JSONAPIClient
     Promise.reject arguments...
 
   type: (name) ->
-    @_types[name] ?= new Type name, this
-    @_types[name]
+    @_typesCache[name] ?= new Type name, this
+    @_typesCache[name]
 
   createType: ->
-    console.warn 'Use JSONAPIClient::type, not ::createType', arguments...
+    console?.warn 'Use JSONAPIClient::type, not ::createType', arguments...
     @type arguments...
 
 module.exports.util = {makeHTTPRequest}

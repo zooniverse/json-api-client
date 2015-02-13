@@ -24,8 +24,8 @@ class Resource extends Model
 
   update: ->
     value = super
-    if @id and @_type._cache[@id] isnt this
-      @_type._cache[@id] = this
+    if @id and @_type._resourcesCache[@id] isnt this
+      @_type._resourcesCache[@id] = this
       @_type.emit 'change'
     value
 
@@ -64,7 +64,7 @@ class Resource extends Model
   uncache: ->
     if @id
       @emit 'uncache'
-      delete @_type._cache[@id]
+      delete @_type._resourcesCache[@id]
     else
       throw new Error 'Can\'t uncache a resource with no ID'
 
@@ -85,30 +85,31 @@ class Resource extends Model
       null
 
   get: (name, {skipCache} = {}) ->
-    new ResourcePromise if name of this
-      Promise.resolve @[name]
+    if name of this
+      new ResourcePromise Promise.resolve @[name]
     else if @_linksCache[name]? and not skipCache
       @_linksCache[name]
     else
       link = @links?[name]
+      typeLink = @_type._links[name]
       result = if typeof link is 'string' or Array.isArray link # It's an ID or IDs.
-        @_getLinkByIDs name, link
-      else if link? # It's a collection object.
-        @_getLinkByObject name, link
+        @_getLinkByIDs name, link, typeLink
+      else if link? or typeLink? # It's a collection object.
+        @_getLinkByObject name, link ? typeLink
       else
         throw new Error "No link '#{name}' defined for #{@_type._name}##{@id}"
       result.then =>
         @_linksCache[name] = result
       result
 
-  _getLinkByIDs: (name, idOrIDs) ->
-    if @_type._links[name]?
-      {type, href} = @_type._links[name]
+  _getLinkByIDs: (name, idOrIDs, typeLink) ->
+    if typeLink?
+      {type, href} = typeLink
 
       if type?
         @_type._client.type(type).get idOrIDs
       else if href?
-        @_type._client.get(@_applyHREF href).then (resources) ->
+        new ResourcePromise @_type._client.get(@_applyHREF href).then (resources) ->
           if typeof idOrIDs is 'string'
             resources[0]
           else
@@ -150,38 +151,45 @@ class Resource extends Model
     @href || @_type._getURL @id, arguments...
 
   link: ->
-    console.warn 'Use Resource::get, not ::link', arguments...
+    console?.warn 'Use Resource::get, not ::link', arguments...
     @get arguments...
 
 # NOTE: This is totally experimental.
 class ResourcePromise
   _promise: null
-  _parent: null
 
-  constructor: (@_promise, @_parent) ->
-    # Pass
+  constructor: (@_promise) ->
+    unless @_promise instanceof Promise
+      throw new Error 'ResourcePromise requires a real promise instance'
 
   then: ->
-    new @constructor @_promise.then(arguments...), @_promise
+    @_promise.then arguments...
 
   catch: ->
-    new @constructor @_promise.catch(arguments...), @_promise
+    @_promise.catch arguments...
 
-  end: ->
-    new @constructor @_parent
+  index: (index) ->
+    @_promise = @_promise.then (value) ->
+      if index < 0
+        index = value.length - index
+      value[index]
+    this
 
   for methodName, method of Resource.prototype
     if typeof method is 'function' and methodName not of this.prototype
       do (methodName, method) =>
         @::[methodName] = (args...) ->
-          outPromise = @_promise.then (promisedValue) ->
-            results = for resource in [].concat(promisedValue)
-              method.apply resource, args
+          @_promise = @_promise.then (promisedValue) =>
+            results = for resource in [].concat promisedValue
+              result = method.apply resource, args
+              if result instanceof @constructor
+                result = result._promise
+              result
             if Array.isArray promisedValue
               Promise.all results
             else
               results[0]
-          new @constructor outPromise, @_promise
+          this
 
 module.exports = Resource
 module.exports.Promise = ResourcePromise

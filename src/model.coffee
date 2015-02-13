@@ -14,7 +14,7 @@ module.exports = class Model extends Emitter
   update: (changeSet = {}) ->
     if typeof changeSet is 'string'
       # This is a note for myself, I'll remove it soon, and this feature will still work as it does now.
-      console.warn 'You can now update dotted-path keys, so you probably don\'t need to call Resource::update on strings anymore.'
+      console?.warn 'You can now update dotted-path keys, so you probably don\'t need to call Resource::update on strings anymore.'
       for key in arguments when key not in @_changedKeys
         @_changedKeys.push arguments...
     else
