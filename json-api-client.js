@@ -576,13 +576,13 @@ module.exports = Resource = (function(_super) {
   };
 
   Resource.prototype.get = function(name, _arg) {
-    var link, skipCache, value, _ref;
+    var link, skipCache, _ref;
     skipCache = (_arg != null ? _arg : {}).skipCache;
     if ((this._linksCache[name] != null) && !skipCache) {
       return this._linksCache[name];
     } else {
       link = (_ref = this.links) != null ? _ref[name] : void 0;
-      value = (function() {
+      this._linksCache[name] = (function() {
         if (typeof link === 'string' || Array.isArray(link)) {
           return this._getLinkByIDs(name, link);
         } else if (link != null) {
@@ -591,10 +591,7 @@ module.exports = Resource = (function(_super) {
           throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
         }
       }).call(this);
-      if (!skipCache) {
-        this._linksCache[name] = value;
-      }
-      return value;
+      return this._linksCache[name];
     }
   };
 

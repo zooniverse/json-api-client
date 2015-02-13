@@ -91,17 +91,14 @@ module.exports = class Resource extends Model
     else
       link = @links?[name]
 
-      value = if typeof link is 'string' or Array.isArray link # It's an ID or IDs.
+      @_linksCache[name] = if typeof link is 'string' or Array.isArray link # It's an ID or IDs.
         @_getLinkByIDs name, link
       else if link? # It's a collection object.
         @_getLinkByObject name, link
       else
         throw new Error "No link '#{name}' defined for #{@_type._name}##{@id}"
 
-      unless skipCache
-        @_linksCache[name] = value
-
-      value
+      @_linksCache[name]
 
   _getLinkByIDs: (name, idOrIDs) ->
     if @_type._links[name]?
@@ -113,7 +110,7 @@ module.exports = class Resource extends Model
         @_type._client.get(@_applyHREF href).then (resources) ->
           if typeof idOrIDs is 'string'
             resources[0]
-          else # It's an array.
+          else
             resources
       else
         throw new Error "No type or href for link '#{name}' of #{@_type._name}##{@id ? '?'}"
