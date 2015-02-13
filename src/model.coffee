@@ -27,10 +27,8 @@ module.exports = class Model extends Emitter
         lastKey = path.shift()
         if value is undefined
           delete base[lastKey]
-        else if typeof value is 'function'
-          value.call base[lastKey]
         else
-          base[key] = value
+          base[lastKey] = value
         unless rootKey in @_changedKeys
           @_changedKeys.push rootKey
     @emit 'change'

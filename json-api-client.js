@@ -440,10 +440,8 @@ module.exports = Model = (function(_super) {
         lastKey = path.shift();
         if (value === void 0) {
           delete base[lastKey];
-        } else if (typeof value === 'function') {
-          value.call(base[lastKey]);
         } else {
-          base[key] = value;
+          base[lastKey] = value;
         }
         if (__indexOf.call(this._changedKeys, rootKey) < 0) {
           this._changedKeys.push(rootKey);
