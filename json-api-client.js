@@ -465,18 +465,16 @@ module.exports = Model = (function(_super) {
 
 
 },{"./emitter":1,"./merge-into":4}],6:[function(_dereq_,module,exports){
-var Model, PLACEHOLDERS_PATTERN, Resource, mergeInto,
+var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice;
 
 Model = _dereq_('./model');
 
-mergeInto = _dereq_('./merge-into');
-
 PLACEHOLDERS_PATTERN = /{(.+?)}/g;
 
-module.exports = Resource = (function(_super) {
+Resource = (function(_super) {
   __extends(Resource, _super);
 
   Resource.prototype._ignoredKeys = Model.prototype._ignoredKeys.concat(['id', 'type', 'href']);
@@ -519,7 +517,7 @@ module.exports = Resource = (function(_super) {
     payload = {};
     payload[this._type._name] = this.getChangesSinceSave();
     save = this.id ? (headers = {}, 'Last-Modified' in this._headers ? headers['If-Unmodified-Since'] = this._headers['Last-Modified'] : void 0, this._type._client.put(this._getURL(), payload, headers)) : this._type._client.post(this._type._getURL(), payload);
-    return save.then((function(_this) {
+    return new ResourcePromise(save.then((function(_this) {
       return function(_arg) {
         var result;
         result = _arg[0];
@@ -531,7 +529,7 @@ module.exports = Resource = (function(_super) {
         _this.emit('save');
         return _this;
       };
-    })(this));
+    })(this)));
   };
 
   Resource.prototype.getChangesSinceSave = function() {
@@ -565,34 +563,32 @@ module.exports = Resource = (function(_super) {
   Resource.prototype["delete"] = function() {
     var deletion, headers;
     deletion = this.id ? (this.uncache(), headers = {}, 'Last-Modified' in this._headers ? headers['If-Unmodified-Since'] = this._headers['Last-Modified'] : void 0, this._type._client["delete"](this._getURL(), null, headers)) : Promise.resolve();
-    return deletion.then((function(_this) {
+    return new ResourcePromise(deletion.then((function(_this) {
       return function() {
         _this.emit('delete');
         _this._type.emit('change');
         _this.destroy();
         return null;
       };
-    })(this));
+    })(this)));
   };
 
   Resource.prototype.get = function(name, _arg) {
-    var link, skipCache, _ref;
+    var link, result, skipCache, _ref;
     skipCache = (_arg != null ? _arg : {}).skipCache;
-    if ((this._linksCache[name] != null) && !skipCache) {
-      return this._linksCache[name];
-    } else {
-      link = (_ref = this.links) != null ? _ref[name] : void 0;
-      this._linksCache[name] = (function() {
-        if (typeof link === 'string' || Array.isArray(link)) {
-          return this._getLinkByIDs(name, link);
-        } else if (link != null) {
-          return this._getLinkByObject(name, link);
-        } else {
-          throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
-        }
-      }).call(this);
-      return this._linksCache[name];
-    }
+    return new ResourcePromise(name in this ? Promise.resolve(this[name]) : (this._linksCache[name] != null) && !skipCache ? this._linksCache[name] : (link = (_ref = this.links) != null ? _ref[name] : void 0, result = (function() {
+      if (typeof link === 'string' || Array.isArray(link)) {
+        return this._getLinkByIDs(name, link);
+      } else if (link != null) {
+        return this._getLinkByObject(name, link);
+      } else {
+        throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
+      }
+    }).call(this), result.then((function(_this) {
+      return function() {
+        return _this._linksCache[name] = result;
+      };
+    })(this)), result));
   };
 
   Resource.prototype._getLinkByIDs = function(name, idOrIDs) {
@@ -623,7 +619,7 @@ module.exports = Resource = (function(_super) {
     if (((id != null) || (ids != null)) && (type != null)) {
       return this._type._client.type(type).get(id != null ? id : ids);
     } else if (href != null) {
-      return this._type._client.get(this._applyHREF(href));
+      return new ResourcePromise(this._type._client.get(this._applyHREF(href)));
     } else {
       throw new Error("No type and ID(s) or href for link '" + name + "' of " + this._type._name + "#" + ((_ref = this.id) != null ? _ref : '?'));
     }
@@ -665,9 +661,75 @@ module.exports = Resource = (function(_super) {
 
 })(Model);
 
+ResourcePromise = (function() {
+  var method, methodName, _ref;
+
+  ResourcePromise.prototype._promise = null;
+
+  ResourcePromise.prototype._parent = null;
+
+  function ResourcePromise(_promise, _parent) {
+    this._promise = _promise;
+    this._parent = _parent;
+  }
+
+  ResourcePromise.prototype.then = function() {
+    var _ref;
+    return new this.constructor((_ref = this._promise).then.apply(_ref, arguments), this._promise);
+  };
+
+  ResourcePromise.prototype["catch"] = function() {
+    var _ref;
+    return new this.constructor((_ref = this._promise)["catch"].apply(_ref, arguments), this._promise);
+  };
+
+  ResourcePromise.prototype.end = function() {
+    return new this.constructor(this._parent);
+  };
+
+  _ref = Resource.prototype;
+  for (methodName in _ref) {
+    method = _ref[methodName];
+    if (typeof method === 'function' && !(methodName in ResourcePromise.prototype)) {
+      (function(methodName, method) {
+        return ResourcePromise.prototype[methodName] = function() {
+          var args, outPromise;
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          outPromise = this._promise.then(function(promisedValue) {
+            var resource, results;
+            results = (function() {
+              var _i, _len, _ref1, _results;
+              _ref1 = [].concat(promisedValue);
+              _results = [];
+              for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+                resource = _ref1[_i];
+                _results.push(method.apply(resource, args));
+              }
+              return _results;
+            })();
+            if (Array.isArray(promisedValue)) {
+              return Promise.all(results);
+            } else {
+              return results[0];
+            }
+          });
+          return new this.constructor(outPromise, this._promise);
+        };
+      })(methodName, method);
+    }
+  }
+
+  return ResourcePromise;
+
+})();
+
+module.exports = Resource;
+
+module.exports.Promise = ResourcePromise;
 
 
-},{"./merge-into":4,"./model":5}],7:[function(_dereq_,module,exports){
+
+},{"./model":5}],7:[function(_dereq_,module,exports){
 var Emitter, Resource, Type,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -728,13 +790,7 @@ module.exports = Type = (function(_super) {
   };
 
   Type.prototype.get = function() {
-    if (typeof arguments[0] === 'string') {
-      return this._getByID.apply(this, arguments);
-    } else if (Array.isArray(arguments[0])) {
-      return this._getByIDs.apply(this, arguments);
-    } else {
-      return this._getByQuery.apply(this, arguments);
-    }
+    return new Resource.Promise(typeof arguments[0] === 'string' ? this._getByID.apply(this, arguments) : Array.isArray(arguments[0]) ? this._getByIDs.apply(this, arguments) : this._getByQuery.apply(this, arguments));
   };
 
   Type.prototype._getByID = function() {

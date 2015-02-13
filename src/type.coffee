@@ -31,7 +31,7 @@ module.exports = class Type extends Emitter
       resource
 
   get: ->
-    if typeof arguments[0] is 'string'
+    new Resource.Promise if typeof arguments[0] is 'string'
       @_getByID arguments...
     else if Array.isArray arguments[0]
       @_getByIDs arguments...

@@ -1,10 +1,9 @@
 Model = require './model'
-mergeInto = require './merge-into'
 
 # Turn a JSON-API "href" template into a usable URL.
 PLACEHOLDERS_PATTERN = /{(.+?)}/g
 
-module.exports = class Resource extends Model
+class Resource extends Model
   _ignoredKeys: Model::_ignoredKeys.concat ['id', 'type', 'href']
 
   _type: null
@@ -42,7 +41,7 @@ module.exports = class Resource extends Model
     else
       @_type._client.post @_type._getURL(), payload
 
-    save.then ([result]) =>
+    new ResourcePromise save.then ([result]) =>
       unless result is this
         @update result
         @_changedKeys.splice 0
@@ -79,26 +78,28 @@ module.exports = class Resource extends Model
     else
       Promise.resolve()
 
-    deletion.then =>
+    new ResourcePromise deletion.then =>
       @emit 'delete'
       @_type.emit 'change'
       @destroy()
       null
 
   get: (name, {skipCache} = {}) ->
-    if @_linksCache[name]? and not skipCache
+    new ResourcePromise if name of this
+      Promise.resolve @[name]
+    else if @_linksCache[name]? and not skipCache
       @_linksCache[name]
     else
       link = @links?[name]
-
-      @_linksCache[name] = if typeof link is 'string' or Array.isArray link # It's an ID or IDs.
+      result = if typeof link is 'string' or Array.isArray link # It's an ID or IDs.
         @_getLinkByIDs name, link
       else if link? # It's a collection object.
         @_getLinkByObject name, link
       else
         throw new Error "No link '#{name}' defined for #{@_type._name}##{@id}"
-
-      @_linksCache[name]
+      result.then =>
+        @_linksCache[name] = result
+      result
 
   _getLinkByIDs: (name, idOrIDs) ->
     if @_type._links[name]?
@@ -121,7 +122,7 @@ module.exports = class Resource extends Model
     if (id? or ids?) and type?
       @_type._client.type(type).get id ? ids
     else if href?
-      @_type._client.get @_applyHREF href
+      new ResourcePromise @_type._client.get @_applyHREF href
     else
       throw new Error "No type and ID(s) or href for link '#{name}' of #{@_type._name}##{@id ? '?'}"
 
@@ -151,3 +152,36 @@ module.exports = class Resource extends Model
   link: ->
     console.warn 'Use Resource::get, not ::link', arguments...
     @get arguments...
+
+# NOTE: This is totally experimental.
+class ResourcePromise
+  _promise: null
+  _parent: null
+
+  constructor: (@_promise, @_parent) ->
+    # Pass
+
+  then: ->
+    new @constructor @_promise.then(arguments...), @_promise
+
+  catch: ->
+    new @constructor @_promise.catch(arguments...), @_promise
+
+  end: ->
+    new @constructor @_parent
+
+  for methodName, method of Resource.prototype
+    if typeof method is 'function' and methodName not of this.prototype
+      do (methodName, method) =>
+        @::[methodName] = (args...) ->
+          outPromise = @_promise.then (promisedValue) ->
+            results = for resource in [].concat(promisedValue)
+              method.apply resource, args
+            if Array.isArray promisedValue
+              Promise.all results
+            else
+              results[0]
+          new @constructor outPromise, @_promise
+
+module.exports = Resource
+module.exports.Promise = ResourcePromise
