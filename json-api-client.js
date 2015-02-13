@@ -293,9 +293,7 @@ module.exports = JSONAPIClient = (function() {
 
 })();
 
-module.exports.util = {
-  makeHTTPRequest: makeHTTPRequest
-};
+module.exports.makeHTTPRequest = makeHTTPRequest;
 
 module.exports.Emitter = Emitter;
 
@@ -304,6 +302,17 @@ module.exports.Type = Type;
 module.exports.Model = Model;
 
 module.exports.Resource = Resource;
+
+Object.defineProperty(module.exports, 'util', {
+  get: function() {
+    if (typeof console !== "undefined" && console !== null) {
+      console.warn('makeHTTPRequest is available directly from the JSONAPIClient object, no need for `util`');
+    }
+    return {
+      makeHTTPRequest: makeHTTPRequest
+    };
+  }
+});
 
 
 
