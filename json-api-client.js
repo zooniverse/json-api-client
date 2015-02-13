@@ -511,8 +511,11 @@ Resource = (function(_super) {
     this.emit('create');
   }
 
-  Resource.prototype.getRequestMeta = function(key) {
-    return this._meta[key != null ? key : this._type._name];
+  Resource.prototype.getMeta = function(key) {
+    if (key == null) {
+      key = this._type._name;
+    }
+    return this._meta[key];
   };
 
   Resource.prototype.update = function() {
@@ -680,6 +683,13 @@ Resource = (function(_super) {
       console.warn.apply(console, ['Use Resource::get, not ::link'].concat(__slice.call(arguments)));
     }
     return this.get.apply(this, arguments);
+  };
+
+  Resource.prototype.getRequestMeta = function() {
+    if (typeof console !== "undefined" && console !== null) {
+      console.warn.apply(console, ['Use Resource::getMeta, not ::getRequestMeta'].concat(__slice.call(arguments)));
+    }
+    return this.getMeta.apply(this, arguments);
   };
 
   return Resource;

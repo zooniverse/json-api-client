@@ -19,8 +19,8 @@ class Resource extends Model
     @_type.emit 'change'
     @emit 'create'
 
-  getRequestMeta: (key) ->
-    @_meta[key ? @_type._name]
+  getMeta: (key = @_type._name) ->
+    @_meta[key]
 
   update: ->
     value = super
@@ -153,6 +153,10 @@ class Resource extends Model
   link: ->
     console?.warn 'Use Resource::get, not ::link', arguments...
     @get arguments...
+
+  getRequestMeta: ->
+    console?.warn 'Use Resource::getMeta, not ::getRequestMeta', arguments...
+    @getMeta arguments...
 
 # NOTE: This is totally experimental.
 class ResourcePromise
