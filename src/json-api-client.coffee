@@ -11,7 +11,7 @@ DEFAULT_TYPE_AND_ACCEPT =
 
 RESERVED_TOP_LEVEL_KEYS = ['meta', 'links', 'linked', 'data']
 
-module.exports = class JSONAPIClient
+class JSONAPIClient
   root: '/'
   headers: null
 
@@ -90,6 +90,7 @@ module.exports = class JSONAPIClient
     console?.warn 'Use JSONAPIClient::type, not ::createType', arguments...
     @type arguments...
 
+module.exports = JSONAPIClient
 module.exports.makeHTTPRequest = makeHTTPRequest
 module.exports.Emitter = Emitter
 module.exports.Type = Type

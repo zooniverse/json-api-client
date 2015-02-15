@@ -146,7 +146,7 @@ DEFAULT_TYPE_AND_ACCEPT = {
 
 RESERVED_TOP_LEVEL_KEYS = ['meta', 'links', 'linked', 'data'];
 
-module.exports = JSONAPIClient = (function() {
+JSONAPIClient = (function() {
   var method, _fn, _i, _len, _ref;
 
   JSONAPIClient.prototype.root = '/';
@@ -292,6 +292,8 @@ module.exports = JSONAPIClient = (function() {
   return JSONAPIClient;
 
 })();
+
+module.exports = JSONAPIClient;
 
 module.exports.makeHTTPRequest = makeHTTPRequest;
 
