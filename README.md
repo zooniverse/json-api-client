@@ -35,17 +35,13 @@ brian.delete()
 ### Retrieving existing resources
 
 ```coffee
-
-# Retrieve a resource by ID
-client.type('people').get('1').then (person) ->
-
 # Retrieve a resource by ID
 client.type('people').get('1').then (person) ->
 
 # Retrieve several resources by ID
 client.type('people').get(['1', '2', '3']).then (people) ->
 
-# Retrieve a resource by ID, skipping local cache
+# Retrieve a resource by ID, skipping local cache (TODO: Fix inconsistent syntax)
 # (Any request with query params is passed to the server.)
 client.type('people').get('1', {})).then (person) ->
 
@@ -53,7 +49,7 @@ client.type('people').get('1', {})).then (person) ->
 client.type('people').get(name: 'Brian').then (people) ->
 
 # Chaining promised resource methods (experimental)
-client.type('people').get({name: 'Brian'}).index(0).update(name: 'Brian C.').save().get('name').then (briansName) ->
+client.type('people').get(name: 'Brian').index(0).update(name: 'Brian C.').save().get('name').then (briansName) ->
 ```
 
 ### Watching a resource for changes
@@ -70,12 +66,15 @@ client.type('people').get('1').then (person) ->
 ### Working with links
 
 ```coffee
-# Get a link
+# Get a link (from local cache if, possible)
 client.type('people').get('1').then (person) ->
   person.get('pet').then (personsPet) ->
 
 # Or (experimental)
 client.type('people').get('1').get('pet').then (personsPet) ->
+
+# Skip the local cache
+person.get('pet', skipCache: true).then (personsPet) ->
 
 # Set a link (manually, for now)
 # More functionality around links to come
