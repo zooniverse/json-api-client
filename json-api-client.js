@@ -481,7 +481,8 @@ module.exports = Model = (function(_super) {
 var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  __slice = [].slice;
+  __slice = [].slice,
+  __modulo = function(a, b) { return (+a % (b = +b) + b) % b; };
 
 Model = _dereq_('./model');
 
@@ -720,9 +721,7 @@ ResourcePromise = (function() {
 
   ResourcePromise.prototype.index = function(index) {
     this._promise = this._promise.then(function(value) {
-      if (index < 0) {
-        index = value.length - index;
-      }
+      index = __modulo(index, value.length);
       return value[index];
     });
     return this;

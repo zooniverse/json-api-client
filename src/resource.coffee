@@ -174,8 +174,7 @@ class ResourcePromise
 
   index: (index) ->
     @_promise = @_promise.then (value) ->
-      if index < 0
-        index = value.length - index
+      index %%= value.length
       value[index]
     this
 
