@@ -181,11 +181,11 @@ class ResourcePromise
 
   for methodName, method of Resource.prototype
     if typeof method is 'function' and methodName not of this.prototype
-      do (methodName, method) =>
+      do (methodName) =>
         @::[methodName] = (args...) ->
           @_promise = @_promise.then (promisedValue) =>
             results = for resource in [].concat promisedValue
-              result = method.apply resource, args
+              result = resource[methodName] args...
               if result instanceof @constructor
                 result = result._promise
               result

@@ -730,7 +730,7 @@ ResourcePromise = (function() {
   for (methodName in _ref) {
     method = _ref[methodName];
     if (typeof method === 'function' && !(methodName in ResourcePromise.prototype)) {
-      (function(methodName, method) {
+      (function(methodName) {
         return ResourcePromise.prototype[methodName] = function() {
           var args;
           args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -743,7 +743,7 @@ ResourcePromise = (function() {
                 _results = [];
                 for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
                   resource = _ref1[_i];
-                  result = method.apply(resource, args);
+                  result = resource[methodName].apply(resource, args);
                   if (result instanceof this.constructor) {
                     result = result._promise;
                   }
@@ -760,7 +760,7 @@ ResourcePromise = (function() {
           })(this));
           return this;
         };
-      })(methodName, method);
+      })(methodName);
     }
   }
 
