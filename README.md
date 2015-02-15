@@ -2,6 +2,8 @@
 
 A client for the unfortunately named JSON API spec <http://jsonapi.org/>
 
+Requires a native (or polyfilled) `Promise` class.
+
 ## Setting up a client
 
 ```coffee
