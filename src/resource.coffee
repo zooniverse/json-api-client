@@ -1,11 +1,13 @@
 Model = require './model'
 
+ignoreUnderscoredKeys = (key, value) ->
+  unless key.charAt(0) is '_'
+    value
+
 # Turn a JSON-API "href" template into a usable URL.
 PLACEHOLDERS_PATTERN = /{(.+?)}/g
 
 class Resource extends Model
-  _ignoredKeys: Model::_ignoredKeys.concat ['id', 'type', 'href']
-
   _type: null
   _headers: null
   _meta: null
@@ -32,6 +34,7 @@ class Resource extends Model
   save: ->
     payload = {}
     payload[@_type._name] = @getChangesSinceSave()
+    payload = JSON.parse JSON.stringify payload, ignoreUnderscoredKeys
 
     save = if @id
       headers = {}

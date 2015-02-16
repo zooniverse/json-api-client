@@ -401,8 +401,6 @@ mergeInto = _dereq_('./merge-into');
 module.exports = Model = (function(_super) {
   __extends(Model, _super);
 
-  Model.prototype._ignoredKeys = [];
-
   Model.prototype._changedKeys = null;
 
   function Model() {
@@ -420,9 +418,6 @@ module.exports = Model = (function(_super) {
       changeSet = {};
     }
     if (typeof changeSet === 'string') {
-      if (typeof console !== "undefined" && console !== null) {
-        console.warn('You can now update dotted-path keys, so you probably don\'t need to call Resource::update on strings anymore.');
-      }
       for (_i = 0, _len = arguments.length; _i < _len; _i++) {
         key = arguments[_i];
         if (__indexOf.call(this._changedKeys, key) < 0) {
@@ -458,19 +453,6 @@ module.exports = Model = (function(_super) {
     return this._changedKeys.length !== 0;
   };
 
-  Model.prototype.toJSON = function() {
-    var key, result, value;
-    result = {};
-    for (key in this) {
-      if (!__hasProp.call(this, key)) continue;
-      value = this[key];
-      if (key.charAt(0) !== '_' && __indexOf.call(this._ignoredKeys, key) < 0) {
-        result[key] = value;
-      }
-    }
-    return result;
-  };
-
   return Model;
 
 })(Emitter);
@@ -478,7 +460,7 @@ module.exports = Model = (function(_super) {
 
 
 },{"./emitter":1,"./merge-into":4}],6:[function(_dereq_,module,exports){
-var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise,
+var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise, ignoreUnderscoredKeys,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice,
@@ -486,12 +468,16 @@ var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise,
 
 Model = _dereq_('./model');
 
+ignoreUnderscoredKeys = function(key, value) {
+  if (key.charAt(0) !== '_') {
+    return value;
+  }
+};
+
 PLACEHOLDERS_PATTERN = /{(.+?)}/g;
 
 Resource = (function(_super) {
   __extends(Resource, _super);
-
-  Resource.prototype._ignoredKeys = Model.prototype._ignoredKeys.concat(['id', 'type', 'href']);
 
   Resource.prototype._type = null;
 
@@ -533,6 +519,7 @@ Resource = (function(_super) {
     var headers, payload, save;
     payload = {};
     payload[this._type._name] = this.getChangesSinceSave();
+    payload = JSON.parse(JSON.stringify(payload, ignoreUnderscoredKeys));
     save = this.id ? (headers = {}, 'Last-Modified' in this._headers ? headers['If-Unmodified-Since'] = this._headers['Last-Modified'] : void 0, this._type._client.put(this._getURL(), payload, headers)) : this._type._client.post(this._type._getURL(), payload);
     return new ResourcePromise(save.then((function(_this) {
       return function(_arg) {
