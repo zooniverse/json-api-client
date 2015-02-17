@@ -1,8 +1,15 @@
 Model = require './model'
 
-ignoreUnderscoredKeys = (key, value) ->
-  unless key.charAt(0) is '_'
-    value
+removeUnderscoredKeys = (target) ->
+  if Array.isArray target
+    (removeUnderscoredKeys value for value in target)
+  else if target? and typeof target is 'object'
+    results = {}
+    for key, value of target when key.charAt(0) isnt '_'
+      results[key] = removeUnderscoredKeys value
+    results
+  else
+    target
 
 # Turn a JSON-API "href" template into a usable URL.
 PLACEHOLDERS_PATTERN = /{(.+?)}/g
@@ -33,8 +40,7 @@ class Resource extends Model
 
   save: ->
     payload = {}
-    payload[@_type._name] = @getChangesSinceSave()
-    payload = JSON.parse JSON.stringify payload, ignoreUnderscoredKeys
+    payload[@_type._name] = removeUnderscoredKeys @getChangesSinceSave()
 
     save = if @id
       headers = {}

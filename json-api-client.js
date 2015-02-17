@@ -460,7 +460,7 @@ module.exports = Model = (function(_super) {
 
 
 },{"./emitter":1,"./merge-into":4}],6:[function(_dereq_,module,exports){
-var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise, ignoreUnderscoredKeys,
+var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise, removeUnderscoredKeys,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice,
@@ -468,9 +468,26 @@ var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise, ignoreUnderscoredKey
 
 Model = _dereq_('./model');
 
-ignoreUnderscoredKeys = function(key, value) {
-  if (key.charAt(0) !== '_') {
-    return value;
+removeUnderscoredKeys = function(target) {
+  var key, results, value, _i, _len, _results;
+  if (Array.isArray(target)) {
+    _results = [];
+    for (_i = 0, _len = target.length; _i < _len; _i++) {
+      value = target[_i];
+      _results.push(removeUnderscoredKeys(value));
+    }
+    return _results;
+  } else if ((target != null) && typeof target === 'object') {
+    results = {};
+    for (key in target) {
+      value = target[key];
+      if (key.charAt(0) !== '_') {
+        results[key] = removeUnderscoredKeys(value);
+      }
+    }
+    return results;
+  } else {
+    return target;
   }
 };
 
@@ -518,8 +535,7 @@ Resource = (function(_super) {
   Resource.prototype.save = function() {
     var headers, payload, save;
     payload = {};
-    payload[this._type._name] = this.getChangesSinceSave();
-    payload = JSON.parse(JSON.stringify(payload, ignoreUnderscoredKeys));
+    payload[this._type._name] = removeUnderscoredKeys(this.getChangesSinceSave());
     save = this.id ? (headers = {}, 'Last-Modified' in this._headers ? headers['If-Unmodified-Since'] = this._headers['Last-Modified'] : void 0, this._type._client.put(this._getURL(), payload, headers)) : this._type._client.post(this._type._getURL(), payload);
     return new ResourcePromise(save.then((function(_this) {
       return function(_arg) {
