@@ -64,9 +64,9 @@ class Resource extends Model
       changes[key] = @[key]
     changes
 
-  refresh: ->
+  refresh: (params = {})->
     if @id
-      @_type.get @id, {}
+      @_type.get @id, params
     else
       throw new Error 'Can\'t refresh a resource with no ID'
 

@@ -569,9 +569,12 @@ Resource = (function(_super) {
     return changes;
   };
 
-  Resource.prototype.refresh = function() {
+  Resource.prototype.refresh = function(params) {
+    if (params == null) {
+      params = {};
+    }
     if (this.id) {
-      return this._type.get(this.id, {});
+      return this._type.get(this.id, params);
     } else {
       throw new Error('Can\'t refresh a resource with no ID');
     }
