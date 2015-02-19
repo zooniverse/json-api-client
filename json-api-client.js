@@ -509,8 +509,10 @@ Resource = (function(_super) {
     if (this._type == null) {
       throw new Error('Don\'t call the Resource constructor directly, use `client.type("things").create({});`');
     }
-    Resource.__super__.constructor.call(this, null);
+    this._headers = {};
+    this._meta = {};
     this._linksCache = {};
+    Resource.__super__.constructor.call(this, null);
     this._type.emit('change');
     this.emit('create');
   }
@@ -533,10 +535,14 @@ Resource = (function(_super) {
   };
 
   Resource.prototype.save = function() {
-    var headers, payload, save;
+    var payload, save;
     payload = {};
     payload[this._type._name] = removeUnderscoredKeys(this.getChangesSinceSave());
-    save = this.id ? (headers = {}, 'Last-Modified' in this._headers ? headers['If-Unmodified-Since'] = this._headers['Last-Modified'] : void 0, this._type._client.put(this._getURL(), payload, headers)) : this._type._client.post(this._type._getURL(), payload);
+    save = this.id ? this._refreshHeaders().then((function(_this) {
+      return function() {
+        return _this._type._client.put(_this._getURL(), payload, _this._getHeadersForModification());
+      };
+    })(this)) : this._type._client.post(this._type._getURL(), payload);
     return new ResourcePromise(save.then((function(_this) {
       return function(_arg) {
         var result;
@@ -581,8 +587,12 @@ Resource = (function(_super) {
   };
 
   Resource.prototype["delete"] = function() {
-    var deletion, headers;
-    deletion = this.id ? (this.uncache(), headers = {}, 'Last-Modified' in this._headers ? headers['If-Unmodified-Since'] = this._headers['Last-Modified'] : void 0, this._type._client["delete"](this._getURL(), null, headers)) : Promise.resolve();
+    var deletion;
+    deletion = this.id ? this._refreshHeaders().then((function(_this) {
+      return function() {
+        return _this._type._client["delete"](_this._getURL(), null, _this._getHeadersForModification());
+      };
+    })(this)) : Promise.resolve();
     return new ResourcePromise(deletion.then((function(_this) {
       return function() {
         _this.emit('delete');
@@ -619,6 +629,28 @@ Resource = (function(_super) {
       })(this));
       return result;
     }
+  };
+
+  Resource.prototype._refreshHeaders = function() {
+    var changes;
+    changes = this.getChangesSinceSave();
+    return this.refresh().then((function(_this) {
+      return function() {
+        return _this.update(changes);
+      };
+    })(this));
+  };
+
+  Resource.prototype._getHeadersForModification = function() {
+    var headers;
+    headers = {};
+    if ('Last-Modified' in this._headers) {
+      headers['If-Unmodified-Since'] = this._headers['Last-Modified'];
+    }
+    if ('ETag' in this._headers) {
+      headers['If-Match'] = this._headers['ETag'];
+    }
+    return headers;
   };
 
   Resource.prototype._getLinkByIDs = function(name, idOrIDs, typeLink) {
@@ -779,7 +811,7 @@ module.exports.Promise = ResourcePromise;
 
 
 },{"./model":5}],7:[function(_dereq_,module,exports){
-var Emitter, Resource, Type,
+var Emitter, Resource, Type, mergeInto,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice,
@@ -788,6 +820,8 @@ var Emitter, Resource, Type,
 Emitter = _dereq_('./emitter');
 
 Resource = _dereq_('./resource');
+
+mergeInto = _dereq_('./merge-into');
 
 module.exports = Type = (function(_super) {
   __extends(Type, _super);
@@ -828,8 +862,8 @@ module.exports = Type = (function(_super) {
       return (_ref = this._client.type(data.type)).create.apply(_ref, arguments);
     } else {
       resource = (_ref1 = this._resourcesCache[data.id]) != null ? _ref1 : new this.Resource(this);
-      resource._headers = headers;
-      resource._meta = meta;
+      mergeInto(resource._headers, headers);
+      mergeInto(resource._meta, meta);
       resource.update(data);
       if (resource === this._resourcesCache[data.id]) {
         resource._changedKeys.splice(0);
@@ -919,5 +953,5 @@ module.exports = Type = (function(_super) {
 
 
 
-},{"./emitter":1,"./resource":6}]},{},[2])(2)
+},{"./emitter":1,"./merge-into":4,"./resource":6}]},{},[2])(2)
 });

@@ -23,8 +23,10 @@ class Resource extends Model
   constructor: (@_type) ->
     unless @_type?
       throw new Error 'Don\'t call the Resource constructor directly, use `client.type("things").create({});`'
-    super null
+    @_headers = {}
+    @_meta = {}
     @_linksCache = {}
+    super null
     @_type.emit 'change'
     @emit 'create'
 
@@ -43,10 +45,8 @@ class Resource extends Model
     payload[@_type._name] = removeUnderscoredKeys @getChangesSinceSave()
 
     save = if @id
-      headers = {}
-      if 'Last-Modified' of @_headers
-        headers['If-Unmodified-Since'] = @_headers['Last-Modified']
-      @_type._client.put @_getURL(), payload, headers
+      @_refreshHeaders().then =>
+        @_type._client.put @_getURL(), payload, @_getHeadersForModification()
     else
       @_type._client.post @_type._getURL(), payload
 
@@ -79,11 +79,8 @@ class Resource extends Model
 
   delete: ->
     deletion = if @id
-      @uncache()
-      headers = {}
-      if 'Last-Modified' of @_headers
-        headers['If-Unmodified-Since'] = @_headers['Last-Modified']
-      @_type._client.delete @_getURL(), null, headers
+      @_refreshHeaders().then =>
+        @_type._client.delete @_getURL(), null, @_getHeadersForModification()
     else
       Promise.resolve()
 
@@ -110,6 +107,20 @@ class Resource extends Model
       result.then =>
         @_linksCache[name] = result
       result
+
+  _refreshHeaders: ->
+    # TODO: Make a HEAD request.
+    changes = @getChangesSinceSave()
+    @refresh().then =>
+      @update changes
+
+  _getHeadersForModification: ->
+    headers = {}
+    if 'Last-Modified' of @_headers
+      headers['If-Unmodified-Since'] = @_headers['Last-Modified']
+    if 'ETag' of @_headers
+      headers['If-Match'] = @_headers['ETag']
+    headers
 
   _getLinkByIDs: (name, idOrIDs, typeLink) ->
     if typeLink?

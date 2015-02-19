@@ -1,5 +1,6 @@
 Emitter = require './emitter'
 Resource = require './resource'
+mergeInto = require './merge-into'
 
 module.exports = class Type extends Emitter
   Resource: Resource
@@ -23,8 +24,8 @@ module.exports = class Type extends Emitter
       @_client.type(data.type).create arguments...
     else
       resource = @_resourcesCache[data.id] ? new @Resource this
-      resource._headers = headers
-      resource._meta = meta
+      mergeInto resource._headers, headers
+      mergeInto resource._meta, meta
       resource.update data
       if resource is @_resourcesCache[data.id]
         resource._changedKeys.splice 0

@@ -9,7 +9,7 @@
     "onchange": "0.0.2"
   },
   "scripts": {
-    "start": "onchange ./src/* -- npm run build",
+    "start": "npm run build; onchange ./src/* -- npm run build",
     "build": "browserify --entry ./src/json-api-client.coffee --extension .coffee --transform coffeeify --standalone JSONAPIClient | derequire > ./json-api-client.js"
   }
 }
