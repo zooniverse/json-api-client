@@ -44,18 +44,13 @@ module.exports = class Type extends Emitter
       resource
 
   _getByIDs: (ids, otherArgs...) ->
-    inCache = (id for id in ids when id of @_resourcesCache and otherArgs.length is 0)
-    toFetch = (id for id in ids when id not in inCache)
-    fetch = if toFetch.length is 0
-      Promise.resolve []
-    else
-      url = @_getURL toFetch.join ','
-      @_client.get url, otherArgs...
-    fetch.then (fetched) =>
-      fetchedByID = {}
-      for resource in fetched
-        fetchedByID[resource.id] = resource
-      (fetchedByID[id] ? @_resourcesCache[id] for id in ids)
+    requests = for id in ids
+      if id of @_resourcesCache and otherArgs.length is 0
+        Promise.resolve @_resourcesCache[id]
+      else
+        @_client.get(@_getURL(id), otherArgs...).then ([resource]) ->
+          resource
+    Promise.all requests
 
   _getByQuery: (query, otherArgs...) ->
     @_client.get @_getURL(), query, otherArgs...

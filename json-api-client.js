@@ -817,8 +817,7 @@ module.exports.Promise = ResourcePromise;
 var Emitter, Resource, Type, mergeInto,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  __slice = [].slice,
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  __slice = [].slice;
 
 Emitter = _dereq_('./emitter');
 
@@ -890,47 +889,26 @@ module.exports = Type = (function(_super) {
   };
 
   Type.prototype._getByIDs = function() {
-    var fetch, id, ids, inCache, otherArgs, toFetch, url, _ref;
+    var id, ids, otherArgs, requests;
     ids = arguments[0], otherArgs = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-    inCache = (function() {
-      var _i, _len, _results;
+    requests = (function() {
+      var _i, _len, _ref, _results;
       _results = [];
       for (_i = 0, _len = ids.length; _i < _len; _i++) {
         id = ids[_i];
         if (id in this._resourcesCache && otherArgs.length === 0) {
-          _results.push(id);
+          _results.push(Promise.resolve(this._resourcesCache[id]));
+        } else {
+          _results.push((_ref = this._client).get.apply(_ref, [this._getURL(id)].concat(__slice.call(otherArgs))).then(function(_arg) {
+            var resource;
+            resource = _arg[0];
+            return resource;
+          }));
         }
       }
       return _results;
     }).call(this);
-    toFetch = (function() {
-      var _i, _len, _results;
-      _results = [];
-      for (_i = 0, _len = ids.length; _i < _len; _i++) {
-        id = ids[_i];
-        if (__indexOf.call(inCache, id) < 0) {
-          _results.push(id);
-        }
-      }
-      return _results;
-    })();
-    fetch = toFetch.length === 0 ? Promise.resolve([]) : (url = this._getURL(toFetch.join(',')), (_ref = this._client).get.apply(_ref, [url].concat(__slice.call(otherArgs))));
-    return fetch.then((function(_this) {
-      return function(fetched) {
-        var fetchedByID, resource, _i, _j, _len, _len1, _ref1, _results;
-        fetchedByID = {};
-        for (_i = 0, _len = fetched.length; _i < _len; _i++) {
-          resource = fetched[_i];
-          fetchedByID[resource.id] = resource;
-        }
-        _results = [];
-        for (_j = 0, _len1 = ids.length; _j < _len1; _j++) {
-          id = ids[_j];
-          _results.push((_ref1 = fetchedByID[id]) != null ? _ref1 : _this._resourcesCache[id]);
-        }
-        return _results;
-      };
-    })(this));
+    return Promise.all(requests);
   };
 
   Type.prototype._getByQuery = function() {
