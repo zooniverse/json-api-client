@@ -634,6 +634,30 @@ Resource = (function(_super) {
     }
   };
 
+  Resource.prototype.addLink = function(name, value) {
+    var data, url;
+    url = this._getURL('links', name);
+    data = {};
+    data[name] = value;
+    return this._type._client.put(url, data).then((function(_this) {
+      return function() {
+        delete _this._linksCache[name];
+        return _this.refresh();
+      };
+    })(this));
+  };
+
+  Resource.prototype.removeLink = function(name, value) {
+    var url;
+    url = this._getURL('links', name, [].concat(value).join(','));
+    return this._type._client["delete"](url).then((function(_this) {
+      return function() {
+        delete _this._linksCache[name];
+        return _this.refresh();
+      };
+    })(this));
+  };
+
   Resource.prototype._refreshHeaders = function() {
     var changes;
     changes = this.getChangesSinceSave();

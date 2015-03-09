@@ -108,6 +108,22 @@ class Resource extends Model
         @_linksCache[name] = result
       result
 
+  addLink: (name, value) ->
+    url = @_getURL 'links', name
+
+    data = {}
+    data[name] = value
+
+    @_type._client.put(url, data).then =>
+      delete @_linksCache[name]
+      @refresh()
+
+  removeLink: (name, value) ->
+    url = @_getURL 'links', name, [].concat(value).join ','
+    @_type._client.delete(url).then =>
+      delete @_linksCache[name]
+      @refresh()
+
   _refreshHeaders: ->
     # TODO: Make a HEAD request.
     changes = @getChangesSinceSave()
