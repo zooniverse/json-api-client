@@ -45,7 +45,7 @@ class Resource extends Model
     payload[@_type._name] = removeUnderscoredKeys @getChangesSinceSave()
 
     save = if @id
-      @_refreshHeaders().then =>
+      @refresh(true).then =>
         @_type._client.put @_getURL(), payload, @_getHeadersForModification()
     else
       @_type._client.post @_type._getURL(), payload
@@ -64,9 +64,13 @@ class Resource extends Model
       changes[key] = @[key]
     changes
 
-  refresh: (params = {})->
-    if @id
-      @_type.get @id, params
+  refresh: (saveChanges) ->
+    if saveChanges
+      changes = @getChangesSinceSave()
+      @refresh().then =>
+        @update changes
+    else if @id
+      @_type.get @id, {}
     else
       throw new Error 'Can\'t refresh a resource with no ID'
 
@@ -79,7 +83,7 @@ class Resource extends Model
 
   delete: ->
     deletion = if @id
-      @_refreshHeaders().then =>
+      @refresh(true).then =>
         @_type._client.delete @_getURL(), null, @_getHeadersForModification()
     else
       Promise.resolve()
@@ -115,20 +119,17 @@ class Resource extends Model
     data[name] = value
 
     @_type._client.put(url, data).then =>
-      delete @_linksCache[name]
+      @uncacheLink name
       @refresh()
 
   removeLink: (name, value) ->
     url = @_getURL 'links', name, [].concat(value).join ','
     @_type._client.delete(url).then =>
-      delete @_linksCache[name]
+      @uncacheLink name
       @refresh()
 
-  _refreshHeaders: ->
-    # TODO: Make a HEAD request.
-    changes = @getChangesSinceSave()
-    @refresh().then =>
-      @update changes
+  uncacheLink: (name) ->
+    delete @_linksCache[name]
 
   _getHeadersForModification: ->
     headers = {}

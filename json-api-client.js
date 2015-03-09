@@ -538,7 +538,7 @@ Resource = (function(_super) {
     var payload, save;
     payload = {};
     payload[this._type._name] = removeUnderscoredKeys(this.getChangesSinceSave());
-    save = this.id ? this._refreshHeaders().then((function(_this) {
+    save = this.id ? this.refresh(true).then((function(_this) {
       return function() {
         return _this._type._client.put(_this._getURL(), payload, _this._getHeadersForModification());
       };
@@ -569,12 +569,17 @@ Resource = (function(_super) {
     return changes;
   };
 
-  Resource.prototype.refresh = function(params) {
-    if (params == null) {
-      params = {};
-    }
-    if (this.id) {
-      return this._type.get(this.id, params);
+  Resource.prototype.refresh = function(saveChanges) {
+    var changes;
+    if (saveChanges) {
+      changes = this.getChangesSinceSave();
+      return this.refresh().then((function(_this) {
+        return function() {
+          return _this.update(changes);
+        };
+      })(this));
+    } else if (this.id) {
+      return this._type.get(this.id, {});
     } else {
       throw new Error('Can\'t refresh a resource with no ID');
     }
@@ -591,7 +596,7 @@ Resource = (function(_super) {
 
   Resource.prototype["delete"] = function() {
     var deletion;
-    deletion = this.id ? this._refreshHeaders().then((function(_this) {
+    deletion = this.id ? this.refresh(true).then((function(_this) {
       return function() {
         return _this._type._client["delete"](_this._getURL(), null, _this._getHeadersForModification());
       };
@@ -641,7 +646,7 @@ Resource = (function(_super) {
     data[name] = value;
     return this._type._client.put(url, data).then((function(_this) {
       return function() {
-        delete _this._linksCache[name];
+        _this.uncacheLink(name);
         return _this.refresh();
       };
     })(this));
@@ -652,20 +657,14 @@ Resource = (function(_super) {
     url = this._getURL('links', name, [].concat(value).join(','));
     return this._type._client["delete"](url).then((function(_this) {
       return function() {
-        delete _this._linksCache[name];
+        _this.uncacheLink(name);
         return _this.refresh();
       };
     })(this));
   };
 
-  Resource.prototype._refreshHeaders = function() {
-    var changes;
-    changes = this.getChangesSinceSave();
-    return this.refresh().then((function(_this) {
-      return function() {
-        return _this.update(changes);
-      };
-    })(this));
+  Resource.prototype.uncacheLink = function(name) {
+    return delete this._linksCache[name];
   };
 
   Resource.prototype._getHeadersForModification = function() {
