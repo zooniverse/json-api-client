@@ -163,7 +163,7 @@ JSONAPIClient = (function() {
 
   JSONAPIClient.prototype.request = function(method, url, payload, headers) {
     var allHeaders, fullURL;
-    fullURL = this.root + url;
+    fullURL = ("" + this.root + "/" + url).split('//').join('/');
     allHeaders = mergeInto({}, DEFAULT_TYPE_AND_ACCEPT, this.headers, headers);
     return makeHTTPRequest(method, fullURL, payload, allHeaders).then(this.processResponse.bind(this))["catch"](this.handleError.bind(this));
   };
@@ -369,6 +369,11 @@ module.exports = function(method, url, data, headers, modify) {
             }
             return resolve(request);
           } else {
+            if (method === 'GET') {
+              setTimeout((function() {
+                return delete cachedGets[url];
+              }), CACHE_FOR);
+            }
             return reject(request);
           }
         }
@@ -633,22 +638,47 @@ Resource = (function(_super) {
   };
 
   Resource.prototype.get = function(name, _arg) {
-    var link, result, skipCache, typeLink, _ref;
+    var href, id, ids, resourceLink, result, skipCache, type, typeLink, _ref;
     skipCache = (_arg != null ? _arg : {}).skipCache;
-    if (name in this) {
-      return new ResourcePromise(Promise.resolve(this[name]));
-    } else if ((this._linksCache[name] != null) && !skipCache) {
+    if ((this._linksCache[name] != null) && !skipCache) {
       return this._linksCache[name];
     } else {
-      link = (_ref = this.links) != null ? _ref[name] : void 0;
+      resourceLink = (_ref = this.links) != null ? _ref[name] : void 0;
       typeLink = this._type._links[name];
       result = (function() {
-        if (typeof link === 'string' || Array.isArray(link)) {
-          return this._getLinkByIDs(name, link, typeLink);
-        } else if ((link != null) || (typeLink != null)) {
-          return this._getLinkByObject(name, link != null ? link : typeLink);
-        } else {
-          throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
+        var _ref1, _ref2, _ref3, _ref4;
+        if ((resourceLink != null) || (typeLink != null)) {
+          href = (_ref1 = resourceLink != null ? resourceLink.href : void 0) != null ? _ref1 : typeLink != null ? typeLink.href : void 0;
+          type = (_ref2 = resourceLink != null ? resourceLink.type : void 0) != null ? _ref2 : typeLink != null ? typeLink.type : void 0;
+          id = (_ref3 = resourceLink != null ? resourceLink.id : void 0) != null ? _ref3 : typeLink != null ? typeLink.id : void 0;
+          if (id == null) {
+            id = typeof resourceLink === 'string' ? resourceLink : void 0;
+          }
+          ids = (_ref4 = resourceLink != null ? resourceLink.ids : void 0) != null ? _ref4 : typeLink != null ? typeLink.ids : void 0;
+          if (ids == null) {
+            ids = Array.isArray(resourceLink) ? resourceLink : void 0;
+          }
+          if (href != null) {
+            return this._type._client.get(this._applyHREF(href)).then(function(links) {
+              if (id != null) {
+                return links[0];
+              } else {
+                return links;
+              }
+            });
+          } else if (type != null) {
+            return this._type._client.type(type).get(id != null ? id : ids).then(function(links) {
+              if (id != null) {
+                return links[0];
+              } else {
+                return links;
+              }
+            });
+          } else if (name in this) {
+            return Promise.resolve(this[name]);
+          } else {
+            throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
+          }
         }
       }).call(this);
       result.then((function(_this) {
@@ -656,8 +686,30 @@ Resource = (function(_super) {
           return _this._linksCache[name] = result;
         };
       })(this));
-      return result;
+      return new ResourcePromise(result);
     }
+  };
+
+  Resource.prototype._applyHREF = function(href) {
+    var context;
+    context = {};
+    context[this._type._name] = this;
+    return href.replace(PLACEHOLDERS_PATTERN, function(_, path) {
+      var segment, segments, value, _ref, _ref1;
+      segments = path.split('.');
+      value = context;
+      while (segments.length !== 0) {
+        segment = segments.shift();
+        value = (_ref = value[segment]) != null ? _ref : (_ref1 = value.links) != null ? _ref1[segment] : void 0;
+      }
+      if (Array.isArray(value)) {
+        value = value.join(',');
+      }
+      if (typeof value !== 'string') {
+        throw new Error("Value for '" + path + "' in '" + href + "' should be a string.");
+      }
+      return value;
+    });
   };
 
   Resource.prototype.addLink = function(name, value) {
@@ -698,62 +750,6 @@ Resource = (function(_super) {
       headers['If-Match'] = this._headers['ETag'];
     }
     return headers;
-  };
-
-  Resource.prototype._getLinkByIDs = function(name, idOrIDs, typeLink) {
-    var href, type, _ref;
-    if (typeLink != null) {
-      type = typeLink.type, href = typeLink.href;
-      if (type != null) {
-        return this._type._client.type(type).get(idOrIDs);
-      } else if (href != null) {
-        return new ResourcePromise(this._type._client.get(this._applyHREF(href)).then(function(resources) {
-          if (typeof idOrIDs === 'string') {
-            return resources[0];
-          } else {
-            return resources;
-          }
-        }));
-      } else {
-        throw new Error("No type or href for link '" + name + "' of " + this._type._name + "#" + ((_ref = this.id) != null ? _ref : '?'));
-      }
-    } else {
-      throw new Error("No link '" + name + "' for " + this._type._name);
-    }
-  };
-
-  Resource.prototype._getLinkByObject = function(name, _arg) {
-    var href, id, ids, type, _ref;
-    id = _arg.id, ids = _arg.ids, type = _arg.type, href = _arg.href;
-    if (((id != null) || (ids != null)) && (type != null)) {
-      return this._type._client.type(type).get(id != null ? id : ids);
-    } else if (href != null) {
-      return new ResourcePromise(this._type._client.get(this._applyHREF(href)));
-    } else {
-      throw new Error("No type and ID(s) or href for link '" + name + "' of " + this._type._name + "#" + ((_ref = this.id) != null ? _ref : '?'));
-    }
-  };
-
-  Resource.prototype._applyHREF = function(href) {
-    var context;
-    context = {};
-    context[this._type._name] = this;
-    return href.replace(PLACEHOLDERS_PATTERN, function(_, path) {
-      var segment, segments, value, _ref, _ref1;
-      segments = path.split('.');
-      value = context;
-      while (segments.length !== 0) {
-        segment = segments.shift();
-        value = (_ref = value[segment]) != null ? _ref : (_ref1 = value.links) != null ? _ref1[segment] : void 0;
-      }
-      if (Array.isArray(value)) {
-        value = value.join(',');
-      }
-      if (typeof value !== 'string') {
-        throw new Error("Value for '" + path + "' in '" + href + "' should be a string.");
-      }
-      return value;
-    });
   };
 
   Resource.prototype._getURL = function() {

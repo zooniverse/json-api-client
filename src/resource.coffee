@@ -95,22 +95,69 @@ class Resource extends Model
       null
 
   get: (name, {skipCache} = {}) ->
-    if name of this
-      new ResourcePromise Promise.resolve @[name]
-    else if @_linksCache[name]? and not skipCache
+    if @_linksCache[name]? and not skipCache
       @_linksCache[name]
+
     else
-      link = @links?[name]
+      resourceLink = @links?[name]
       typeLink = @_type._links[name]
-      result = if typeof link is 'string' or Array.isArray link # It's an ID or IDs.
-        @_getLinkByIDs name, link, typeLink
-      else if link? or typeLink? # It's a collection object.
-        @_getLinkByObject name, link ? typeLink
-      else
-        throw new Error "No link '#{name}' defined for #{@_type._name}##{@id}"
+
+      result = if  resourceLink? or typeLink?
+        href = resourceLink?.href ? typeLink?.href
+        type = resourceLink?.type ? typeLink?.type
+
+        id = resourceLink?.id ? typeLink?.id
+        id ?= if typeof resourceLink is 'string'
+          resourceLink
+
+        ids = resourceLink?.ids ? typeLink?.ids
+        ids ?= if Array.isArray resourceLink
+          resourceLink
+
+        if href?
+          @_type._client.get(@_applyHREF href).then (links) ->
+            if id?
+              links[0]
+            else
+              links
+
+        else if type?
+          @_type._client.type(type).get(id ? ids).then (links) ->
+            if id?
+              links[0]
+            else
+              links
+
+        else if name of this
+          Promise.resolve @[name]
+
+        else
+          throw new Error "No link '#{name}' defined for #{@_type._name}##{@id}"
+
       result.then =>
         @_linksCache[name] = result
-      result
+
+      new ResourcePromise result
+
+  _applyHREF: (href) ->
+    context = {}
+    context[@_type._name] = this
+
+    href.replace PLACEHOLDERS_PATTERN, (_, path) ->
+      segments = path.split '.'
+
+      value = context
+      until segments.length is 0
+        segment = segments.shift()
+        value = value[segment] ? value.links?[segment]
+
+      if Array.isArray value
+        value = value.join ','
+
+      unless typeof value is 'string'
+        throw new Error "Value for '#{path}' in '#{href}' should be a string."
+
+      value
 
   addLink: (name, value) ->
     url = @_getURL 'links', name
@@ -138,51 +185,6 @@ class Resource extends Model
     if 'ETag' of @_headers
       headers['If-Match'] = @_headers['ETag']
     headers
-
-  _getLinkByIDs: (name, idOrIDs, typeLink) ->
-    if typeLink?
-      {type, href} = typeLink
-
-      if type?
-        @_type._client.type(type).get idOrIDs
-      else if href?
-        new ResourcePromise @_type._client.get(@_applyHREF href).then (resources) ->
-          if typeof idOrIDs is 'string'
-            resources[0]
-          else
-            resources
-      else
-        throw new Error "No type or href for link '#{name}' of #{@_type._name}##{@id ? '?'}"
-    else
-      throw new Error "No link '#{name}' for #{@_type._name}"
-
-  _getLinkByObject: (name, {id, ids, type, href}) ->
-    if (id? or ids?) and type?
-      @_type._client.type(type).get id ? ids
-    else if href?
-      new ResourcePromise @_type._client.get @_applyHREF href
-    else
-      throw new Error "No type and ID(s) or href for link '#{name}' of #{@_type._name}##{@id ? '?'}"
-
-  _applyHREF: (href) ->
-    context = {}
-    context[@_type._name] = this
-
-    href.replace PLACEHOLDERS_PATTERN, (_, path) ->
-      segments = path.split '.'
-
-      value = context
-      until segments.length is 0
-        segment = segments.shift()
-        value = value[segment] ? value.links?[segment]
-
-      if Array.isArray value
-        value = value.join ','
-
-      unless typeof value is 'string'
-        throw new Error "Value for '#{path}' in '#{href}' should be a string."
-
-      value
 
   _getURL: ->
     @href || @_type._getURL @id, arguments...
