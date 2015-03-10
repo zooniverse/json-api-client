@@ -21,7 +21,7 @@ class JSONAPIClient
     @_typesCache = {}
 
   request: (method, url, payload, headers) ->
-    fullURL = @root + url
+    fullURL = "#{@root}/#{url}".split('//').join '/'
     allHeaders = mergeInto {}, DEFAULT_TYPE_AND_ACCEPT, @headers, headers
     makeHTTPRequest method, fullURL, payload, allHeaders
       .then @processResponse.bind this
