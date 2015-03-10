@@ -1,10 +1,20 @@
-module.exports = (method, url, data, headers, modify) ->
-  new Promise (resolve, reject) ->
-    method = method.toUpperCase()
+# This should be just long enough that near-simultaneous GETs don't make multiple requests.
+CACHE_FOR = 1000
 
-    if data? and method is 'GET'
+cachedGets = {}
+
+module.exports = (method, url, data, headers, modify) ->
+  method = method.toUpperCase()
+
+  if method is 'GET'
+    if data? and Object.keys(data).length isnt 0
       url += '?' + ([key, value].join '=' for key, value of data).join '&'
       data = null
+
+    promise = cachedGets[url]
+
+  promise ?= new Promise (resolve, reject) ->
+    # console.log "Opening #{method} request for #{url}", data
 
     request = new XMLHttpRequest
     request.open method, encodeURI url
@@ -21,6 +31,8 @@ module.exports = (method, url, data, headers, modify) ->
     request.onreadystatechange = (e) ->
       if request.readyState is request.DONE
         if 200 <= request.status < 300
+          if method is 'GET'
+            setTimeout (-> delete cachedGets[url]), CACHE_FOR
           resolve request
         else
           reject request
@@ -29,3 +41,8 @@ module.exports = (method, url, data, headers, modify) ->
       data = JSON.stringify data
 
     request.send data
+
+  if method is 'GET'
+    cachedGets[url] = promise
+
+  promise

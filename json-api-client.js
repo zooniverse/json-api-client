@@ -319,11 +319,17 @@ Object.defineProperty(module.exports, 'util', {
 
 
 },{"./emitter":1,"./make-http-request":3,"./merge-into":4,"./model":5,"./resource":6,"./type":7}],3:[function(_dereq_,module,exports){
+var CACHE_FOR, cachedGets;
+
+CACHE_FOR = 1000;
+
+cachedGets = {};
+
 module.exports = function(method, url, data, headers, modify) {
-  return new Promise(function(resolve, reject) {
-    var header, key, request, value, _ref;
-    method = method.toUpperCase();
-    if ((data != null) && method === 'GET') {
+  var key, promise, value;
+  method = method.toUpperCase();
+  if (method === 'GET') {
+    if ((data != null) && Object.keys(data).length !== 0) {
       url += '?' + ((function() {
         var _results;
         _results = [];
@@ -335,33 +341,48 @@ module.exports = function(method, url, data, headers, modify) {
       })()).join('&');
       data = null;
     }
-    request = new XMLHttpRequest;
-    request.open(method, encodeURI(url));
-    request.withCredentials = true;
-    if (headers != null) {
-      for (header in headers) {
-        value = headers[header];
-        request.setRequestHeader(header, value);
-      }
-    }
-    if (modify != null) {
-      modify(request);
-    }
-    request.onreadystatechange = function(e) {
-      var _ref;
-      if (request.readyState === request.DONE) {
-        if ((200 <= (_ref = request.status) && _ref < 300)) {
-          return resolve(request);
-        } else {
-          return reject(request);
+    promise = cachedGets[url];
+  }
+  if (promise == null) {
+    promise = new Promise(function(resolve, reject) {
+      var header, request, _ref;
+      request = new XMLHttpRequest;
+      request.open(method, encodeURI(url));
+      request.withCredentials = true;
+      if (headers != null) {
+        for (header in headers) {
+          value = headers[header];
+          request.setRequestHeader(header, value);
         }
       }
-    };
-    if ((data != null) && (headers != null ? (_ref = headers['Content-Type']) != null ? _ref.indexOf('json') : void 0 : void 0) !== -1) {
-      data = JSON.stringify(data);
-    }
-    return request.send(data);
-  });
+      if (modify != null) {
+        modify(request);
+      }
+      request.onreadystatechange = function(e) {
+        var _ref;
+        if (request.readyState === request.DONE) {
+          if ((200 <= (_ref = request.status) && _ref < 300)) {
+            if (method === 'GET') {
+              setTimeout((function() {
+                return delete cachedGets[url];
+              }), CACHE_FOR);
+            }
+            return resolve(request);
+          } else {
+            return reject(request);
+          }
+        }
+      };
+      if ((data != null) && (headers != null ? (_ref = headers['Content-Type']) != null ? _ref.indexOf('json') : void 0 : void 0) !== -1) {
+        data = JSON.stringify(data);
+      }
+      return request.send(data);
+    });
+  }
+  if (method === 'GET') {
+    cachedGets[url] = promise;
+  }
+  return promise;
 };
 
 
