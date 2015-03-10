@@ -35,6 +35,8 @@ module.exports = (method, url, data, headers, modify) ->
             setTimeout (-> delete cachedGets[url]), CACHE_FOR
           resolve request
         else
+          if method is 'GET'
+            setTimeout (-> delete cachedGets[url]), CACHE_FOR
           reject request
 
     if data? and headers?['Content-Type']?.indexOf('json') isnt -1
