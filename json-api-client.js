@@ -717,7 +717,7 @@ Resource = (function(_super) {
     url = this._getURL('links', name);
     data = {};
     data[name] = value;
-    return this._type._client.put(url, data).then((function(_this) {
+    return this._type._client.post(url, data).then((function(_this) {
       return function() {
         _this.uncacheLink(name);
         return _this.refresh();

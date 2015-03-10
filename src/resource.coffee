@@ -163,9 +163,9 @@ class Resource extends Model
     url = @_getURL 'links', name
 
     data = {}
-    data[name] = value
+    data[name] = value # TODO: Should this always be an array?
 
-    @_type._client.put(url, data).then =>
+    @_type._client.post(url, data).then =>
       @uncacheLink name
       @refresh()
 
