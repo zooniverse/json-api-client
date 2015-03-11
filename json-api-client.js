@@ -163,7 +163,7 @@ JSONAPIClient = (function() {
 
   JSONAPIClient.prototype.request = function(method, url, payload, headers) {
     var allHeaders, fullURL;
-    fullURL = ("" + this.root + "/" + url).split('//').join('/');
+    fullURL = this.root + url;
     allHeaders = mergeInto({}, DEFAULT_TYPE_AND_ACCEPT, this.headers, headers);
     return makeHTTPRequest(method, fullURL, payload, allHeaders).then(this.processResponse.bind(this))["catch"](this.handleError.bind(this));
   };
