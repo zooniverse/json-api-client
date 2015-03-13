@@ -70,20 +70,25 @@ client.type('people').get('1').then (person) ->
 ```coffee
 # Get a link (from local cache if, possible)
 client.type('people').get('1').then (person) ->
-  person.get('pet').then (personsPet) ->
+  person.get('pets').then (personsPets) ->
 
 # Or (experimental)
-client.type('people').get('1').get('pet').then (personsPet) ->
+client.type('people').get('1').get('pets').then (personsPets) ->
 
 # Skip the local cache
-person.get('pet', skipCache: true).then (personsPet) ->
+person.get('pets', skipCache: true).then (personsPets) ->
 
-# Set a link (manually, for now)
-# More functionality around links to come
+# Set a link manually
 client.type('animals').create(name: 'Spot').save().then (spot) ->
   client.type('people').get('1').then (person) ->
-    person.update('links.pet', spot.id).save()
+    person.update('links.pets', [spot.id]).save()
 ```
+
+# Add an item to a link (instead of replacing the whole thing)
+client.type('people').get('1').addLink 'pets', [rex.id, rover.id]
+
+# Remove an item from a link
+client.type('people').get('1').removeLink 'pets', spot.id
 
 ### Getting response metadata
 
