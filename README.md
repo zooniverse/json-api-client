@@ -82,13 +82,13 @@ person.get('pets', skipCache: true).then (personsPets) ->
 client.type('animals').create(name: 'Spot').save().then (spot) ->
   client.type('people').get('1').then (person) ->
     person.update('links.pets', [spot.id]).save()
-```
 
 # Add an item to a link (instead of replacing the whole thing)
 client.type('people').get('1').addLink 'pets', [rex.id, rover.id]
 
 # Remove an item from a link
 client.type('people').get('1').removeLink 'pets', spot.id
+```
 
 ### Getting response metadata
 
