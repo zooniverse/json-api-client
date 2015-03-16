@@ -352,7 +352,9 @@ module.exports = function(method, url, data, headers, modify) {
       if (headers != null) {
         for (header in headers) {
           value = headers[header];
-          request.setRequestHeader(header, value);
+          if (value != null) {
+            request.setRequestHeader(header, value);
+          }
         }
       }
       if (modify != null) {
@@ -741,15 +743,27 @@ Resource = (function(_super) {
   };
 
   Resource.prototype._getHeadersForModification = function() {
-    var headers;
-    headers = {};
-    if ('Last-Modified' in this._headers) {
-      headers['If-Unmodified-Since'] = this._headers['Last-Modified'];
-    }
-    if ('ETag' in this._headers) {
-      headers['If-Match'] = this._headers['ETag'];
-    }
-    return headers;
+    return {
+      'If-Unmodified-Since': this._getHeader('Last-Modified'),
+      'If-Match': this._getHeader('ETag')
+    };
+  };
+
+  Resource.prototype._getHeader = function(header) {
+    var name, value;
+    header = header.toLowerCase();
+    return ((function() {
+      var _ref, _results;
+      _ref = this._headers;
+      _results = [];
+      for (name in _ref) {
+        value = _ref[name];
+        if (name.toLowerCase() === header) {
+          _results.push(value);
+        }
+      }
+      return _results;
+    }).call(this))[0];
   };
 
   Resource.prototype._getURL = function() {

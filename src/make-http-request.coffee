@@ -22,7 +22,7 @@ module.exports = (method, url, data, headers, modify) ->
     request.withCredentials = true
 
     if headers?
-      for header, value of headers
+      for header, value of headers when value?
         request.setRequestHeader header, value
 
     if modify?
