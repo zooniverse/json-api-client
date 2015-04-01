@@ -416,7 +416,7 @@ module.exports = function() {
 
 
 },{}],5:[function(_dereq_,module,exports){
-var Emitter, Model, isIndex, mergeInto,
+var Emitter, Model, isIndex, mergeInto, removeUnderscoredKeys,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice,
@@ -430,6 +430,29 @@ isIndex = function(string) {
   var integer;
   integer = Math.abs(parseInt(string, 10));
   return integer.toString(10) === string && !isNaN(integer);
+};
+
+removeUnderscoredKeys = function(target) {
+  var key, results, value, _i, _len, _results;
+  if (Array.isArray(target)) {
+    _results = [];
+    for (_i = 0, _len = target.length; _i < _len; _i++) {
+      value = target[_i];
+      _results.push(removeUnderscoredKeys(value));
+    }
+    return _results;
+  } else if ((target != null) && typeof target === 'object') {
+    results = {};
+    for (key in target) {
+      value = target[key];
+      if (key.charAt(0) !== '_') {
+        results[key] = removeUnderscoredKeys(value);
+      }
+    }
+    return results;
+  } else {
+    return target;
+  }
 };
 
 module.exports = Model = (function(_super) {
@@ -490,6 +513,10 @@ module.exports = Model = (function(_super) {
     return this._changedKeys.length !== 0;
   };
 
+  Model.prototype.toJSON = function() {
+    return removeUnderscoredKeys(this);
+  };
+
   return Model;
 
 })(Emitter);
@@ -497,36 +524,13 @@ module.exports = Model = (function(_super) {
 
 
 },{"./emitter":1,"./merge-into":4}],6:[function(_dereq_,module,exports){
-var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise, removeUnderscoredKeys,
+var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice,
   __modulo = function(a, b) { return (+a % (b = +b) + b) % b; };
 
 Model = _dereq_('./model');
-
-removeUnderscoredKeys = function(target) {
-  var key, results, value, _i, _len, _results;
-  if (Array.isArray(target)) {
-    _results = [];
-    for (_i = 0, _len = target.length; _i < _len; _i++) {
-      value = target[_i];
-      _results.push(removeUnderscoredKeys(value));
-    }
-    return _results;
-  } else if ((target != null) && typeof target === 'object') {
-    results = {};
-    for (key in target) {
-      value = target[key];
-      if (key.charAt(0) !== '_') {
-        results[key] = removeUnderscoredKeys(value);
-      }
-    }
-    return results;
-  } else {
-    return target;
-  }
-};
 
 PLACEHOLDERS_PATTERN = /{(.+?)}/g;
 
@@ -574,7 +578,7 @@ Resource = (function(_super) {
   Resource.prototype.save = function() {
     var payload, save;
     payload = {};
-    payload[this._type._name] = removeUnderscoredKeys(this.getChangesSinceSave());
+    payload[this._type._name] = this.toJSON.call(this.getChangesSinceSave());
     save = this.id ? this.refresh(true).then((function(_this) {
       return function() {
         return _this._type._client.put(_this._getURL(), payload, _this._getHeadersForModification());

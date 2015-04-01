@@ -5,6 +5,17 @@ isIndex = (string) ->
   integer = Math.abs parseInt string, 10
   integer.toString(10) is string and not isNaN integer
 
+removeUnderscoredKeys = (target) ->
+  if Array.isArray target
+    (removeUnderscoredKeys value for value in target)
+  else if target? and typeof target is 'object'
+    results = {}
+    for key, value of target when key.charAt(0) isnt '_'
+      results[key] = removeUnderscoredKeys value
+    results
+  else
+    target
+
 module.exports = class Model extends Emitter
   _changedKeys: null
 
@@ -42,3 +53,6 @@ module.exports = class Model extends Emitter
 
   hasUnsavedChanges: ->
     @_changedKeys.length isnt 0
+
+  toJSON: ->
+    removeUnderscoredKeys this
