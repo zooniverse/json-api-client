@@ -416,7 +416,7 @@ module.exports = function() {
 
 
 },{}],5:[function(_dereq_,module,exports){
-var Emitter, Model, mergeInto,
+var Emitter, Model, isIndex, mergeInto,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice,
@@ -425,6 +425,12 @@ var Emitter, Model, mergeInto,
 Emitter = _dereq_('./emitter');
 
 mergeInto = _dereq_('./merge-into');
+
+isIndex = function(string) {
+  var integer;
+  integer = Math.abs(parseInt(string, 10));
+  return integer.toString(10) === string && !isNaN(integer);
+};
 
 module.exports = Model = (function(_super) {
   __extends(Model, _super);
@@ -441,7 +447,7 @@ module.exports = Model = (function(_super) {
   }
 
   Model.prototype.update = function(changeSet) {
-    var base, key, lastKey, path, rootKey, value, _i, _len, _ref;
+    var base, key, lastKey, path, rootKey, value, _i, _len, _name, _ref;
     if (changeSet == null) {
       changeSet = {};
     }
@@ -460,6 +466,9 @@ module.exports = Model = (function(_super) {
         rootKey = path[0];
         base = this;
         while (path.length !== 1) {
+          if (base[_name = path[0]] == null) {
+            base[_name] = isIndex(path[0]) ? [] : {};
+          }
           base = base[path.shift()];
         }
         lastKey = path.shift();
