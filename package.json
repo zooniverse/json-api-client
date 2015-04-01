@@ -1,6 +1,6 @@
 {
   "name": "json-api-client",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "main": "./json-api-client",
   "devDependencies": {
     "browserify": "^5.12.1",
