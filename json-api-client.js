@@ -496,7 +496,11 @@ module.exports = Model = (function(_super) {
         }
         lastKey = path.shift();
         if (value === void 0) {
-          delete base[lastKey];
+          if (Array.isArray(base)) {
+            base.splice(lastKey, 1);
+          } else {
+            delete base[lastKey];
+          }
         } else {
           base[lastKey] = value;
         }

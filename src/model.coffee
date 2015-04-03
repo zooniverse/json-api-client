@@ -43,7 +43,10 @@ module.exports = class Model extends Emitter
           base = base[path.shift()]
         lastKey = path.shift()
         if value is undefined
-          delete base[lastKey]
+          if Array.isArray base
+            base.splice lastKey, 1
+          else
+            delete base[lastKey]
         else
           base[lastKey] = value
         unless rootKey in @_changedKeys
