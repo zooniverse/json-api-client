@@ -521,6 +521,11 @@ module.exports = Model = (function(_super) {
     return removeUnderscoredKeys(this);
   };
 
+  Model.prototype.destroy = function() {
+    this._changedKeys.splice(0);
+    return Model.__super__.destroy.apply(this, arguments);
+  };
+
   return Model;
 
 })(Emitter);

@@ -59,3 +59,7 @@ module.exports = class Model extends Emitter
 
   toJSON: ->
     removeUnderscoredKeys this
+
+  destroy: ->
+    @_changedKeys.splice 0
+    super
