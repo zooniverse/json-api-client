@@ -43,7 +43,7 @@ client.type('people').get('1').then (person) ->
 # Retrieve several resources by ID
 client.type('people').get(['1', '2', '3']).then (people) ->
 
-# Retrieve a resource by ID, skipping local cache (TODO: Fix inconsistent syntax)
+# Retrieve a resource by ID, skipping local cache
 # (Any request with query params is passed to the server.)
 client.type('people').get('1', {})).then (person) ->
 
@@ -75,8 +75,8 @@ client.type('people').get('1').then (person) ->
 # Or (experimental)
 client.type('people').get('1').get('pets').then (personsPets) ->
 
-# Skip the local cache
-person.get('pets', skipCache: true).then (personsPets) ->
+# Skip the local cache (again, with query params)
+person.get('pets', {}).then (personsPets) ->
 
 # Set a link manually
 client.type('animals').create(name: 'Spot').save().then (spot) ->

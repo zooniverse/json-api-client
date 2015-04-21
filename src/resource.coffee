@@ -83,8 +83,8 @@ class Resource extends Model
       @destroy()
       null
 
-  get: (name, {skipCache} = {}) ->
-    if @_linksCache[name]? and not skipCache
+  get: (name, query) ->
+    if @_linksCache[name]? and not query?
       @_linksCache[name]
 
     else
@@ -104,14 +104,14 @@ class Resource extends Model
           resourceLink
 
         if href?
-          @_type._client.get(@_applyHREF href).then (links) ->
+          @_type._client.get(@_applyHREF(href), query).then (links) ->
             if id?
               links[0]
             else
               links
 
         else if type?
-          @_type._client.type(type).get(id ? ids).then (links) ->
+          @_type._client.type(type).get(id ? ids, query).then (links) ->
             if id?
               links[0]
             else

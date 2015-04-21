@@ -8,7 +8,11 @@ module.exports = (method, url, data, headers, modify) ->
 
   if method is 'GET'
     if data? and Object.keys(data).length isnt 0
-      url += '?' + ([key, value].join '=' for key, value of data).join '&'
+      url += if url.indexOf('?') is -1
+        '?'
+      else
+        '&'
+      url += ([key, value].join '=' for key, value of data).join '&'
       data = null
 
     promise = cachedGets[url]

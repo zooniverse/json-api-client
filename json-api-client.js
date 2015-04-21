@@ -1,29 +1,29 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.JSONAPIClient=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var DEFAULT_SIGNAL, Emitter, arraysMatch, callHandler,
-  __slice = [].slice;
+  slice = [].slice;
 
 DEFAULT_SIGNAL = 'change';
 
 arraysMatch = function(array1, array2) {
-  var i, item, matches, _ref;
+  var i, item, matches, ref;
   matches = (function() {
-    var _i, _len, _results;
-    _results = [];
-    for (i = _i = 0, _len = array1.length; _i < _len; i = ++_i) {
+    var j, len, results;
+    results = [];
+    for (i = j = 0, len = array1.length; j < len; i = ++j) {
       item = array1[i];
       if (array2[i] === item) {
-        _results.push(i);
+        results.push(i);
       }
     }
-    return _results;
+    return results;
   })();
-  return (array1.length === (_ref = array2.length) && _ref === matches.length);
+  return (array1.length === (ref = array2.length) && ref === matches.length);
 };
 
 callHandler = function(handler, payload) {
-  var boundArgs, context, _ref;
+  var boundArgs, context, ref;
   if (Array.isArray(handler)) {
-    _ref = handler, context = _ref[0], handler = _ref[1], boundArgs = 3 <= _ref.length ? __slice.call(_ref, 2) : [];
+    ref = handler, context = ref[0], handler = ref[1], boundArgs = 3 <= ref.length ? slice.call(ref, 2) : [];
     if (typeof handler === 'string') {
       handler = context[handler];
     }
@@ -41,23 +41,23 @@ module.exports = Emitter = (function() {
   }
 
   Emitter.prototype.listen = function() {
-    var callback, signal, _arg, _base, _i;
-    _arg = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), callback = arguments[_i++];
-    signal = _arg[0];
+    var arg, base, callback, j, signal;
+    arg = 2 <= arguments.length ? slice.call(arguments, 0, j = arguments.length - 1) : (j = 0, []), callback = arguments[j++];
+    signal = arg[0];
     if (signal == null) {
       signal = DEFAULT_SIGNAL;
     }
-    if ((_base = this._callbacks)[signal] == null) {
-      _base[signal] = [];
+    if ((base = this._callbacks)[signal] == null) {
+      base[signal] = [];
     }
     this._callbacks[signal].push(callback);
     return this;
   };
 
   Emitter.prototype.stopListening = function() {
-    var callback, handler, i, index, signal, _arg, _i, _j, _ref;
-    _arg = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), callback = arguments[_i++];
-    signal = _arg[0];
+    var arg, callback, handler, i, index, j, k, ref, signal;
+    arg = 2 <= arguments.length ? slice.call(arguments, 0, j = arguments.length - 1) : (j = 0, []), callback = arguments[j++];
+    signal = arg[0];
     if (signal == null) {
       signal = DEFAULT_SIGNAL;
     }
@@ -65,9 +65,9 @@ module.exports = Emitter = (function() {
       if (callback != null) {
         if (Array.isArray(callback)) {
           index = -1;
-          _ref = this._callbacks[signal];
-          for (i = _j = _ref.length - 1; _j >= 0; i = _j += -1) {
-            handler = _ref[i];
+          ref = this._callbacks[signal];
+          for (i = k = ref.length - 1; k >= 0; i = k += -1) {
+            handler = ref[i];
             if (Array.isArray(handler)) {
               if (arraysMatch(callback, handler)) {
                 index = i;
@@ -89,15 +89,15 @@ module.exports = Emitter = (function() {
   };
 
   Emitter.prototype.emit = function() {
-    var callback, payload, signal, _i, _len, _ref;
-    signal = arguments[0], payload = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+    var callback, j, len, payload, ref, signal;
+    signal = arguments[0], payload = 2 <= arguments.length ? slice.call(arguments, 1) : [];
     if (signal == null) {
       signal = DEFAULT_SIGNAL;
     }
     if (signal in this._callbacks) {
-      _ref = this._callbacks[signal];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        callback = _ref[_i];
+      ref = this._callbacks[signal];
+      for (j = 0, len = ref.length; j < len; j++) {
+        callback = ref[j];
         callHandler(callback, payload);
       }
     }
@@ -105,12 +105,12 @@ module.exports = Emitter = (function() {
   };
 
   Emitter.prototype.destroy = function() {
-    var callback, signal, _i, _len, _ref;
+    var callback, j, len, ref, signal;
     this.emit('destroy');
     for (signal in this._callbacks) {
-      _ref = this._callbacks[signal];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        callback = _ref[_i];
+      ref = this._callbacks[signal];
+      for (j = 0, len = ref.length; j < len; j++) {
+        callback = ref[j];
         this.stopListening(signal, callback);
       }
     }
@@ -124,8 +124,8 @@ module.exports = Emitter = (function() {
 
 },{}],2:[function(_dereq_,module,exports){
 var DEFAULT_TYPE_AND_ACCEPT, Emitter, JSONAPIClient, Model, RESERVED_TOP_LEVEL_KEYS, Resource, Type, makeHTTPRequest, mergeInto,
-  __slice = [].slice,
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  slice = [].slice,
+  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 makeHTTPRequest = _dereq_('./make-http-request');
 
@@ -147,7 +147,7 @@ DEFAULT_TYPE_AND_ACCEPT = {
 RESERVED_TOP_LEVEL_KEYS = ['meta', 'links', 'linked', 'data'];
 
 JSONAPIClient = (function() {
-  var method, _fn, _i, _len, _ref;
+  var fn, i, len, method, ref;
 
   JSONAPIClient.prototype.root = '/';
 
@@ -155,9 +155,9 @@ JSONAPIClient = (function() {
 
   JSONAPIClient.prototype._typesCache = null;
 
-  function JSONAPIClient(root, headers) {
+  function JSONAPIClient(root, headers1) {
     this.root = root;
-    this.headers = headers != null ? headers : {};
+    this.headers = headers1 != null ? headers1 : {};
     this._typesCache = {};
   }
 
@@ -168,19 +168,19 @@ JSONAPIClient = (function() {
     return makeHTTPRequest(method, fullURL, payload, allHeaders).then(this.processResponse.bind(this))["catch"](this.handleError.bind(this));
   };
 
-  _ref = ['get', 'post', 'put', 'delete'];
-  _fn = function(method) {
+  ref = ['get', 'post', 'put', 'delete'];
+  fn = function(method) {
     return JSONAPIClient.prototype[method] = function() {
-      return this.request.apply(this, [method].concat(__slice.call(arguments)));
+      return this.request.apply(this, [method].concat(slice.call(arguments)));
     };
   };
-  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-    method = _ref[_i];
-    _fn(method);
+  for (i = 0, len = ref.length; i < len; i++) {
+    method = ref[i];
+    fn(method);
   }
 
   JSONAPIClient.prototype.processResponse = function(request) {
-    var headers, linkedResources, resourceData, resources, response, results, typeName, _j, _k, _l, _len1, _len2, _len3, _ref1, _ref2, _ref3, _ref4;
+    var headers, j, k, l, len1, len2, len3, linkedResources, ref1, ref2, ref3, ref4, resourceData, resources, response, results, typeName;
     response = (function() {
       try {
         return JSON.parse(request.responseText);
@@ -193,30 +193,30 @@ JSONAPIClient = (function() {
       this._handleLinks(response.links);
     }
     if ('linked' in response) {
-      _ref1 = response.linked;
-      for (typeName in _ref1) {
-        linkedResources = _ref1[typeName];
-        _ref2 = [].concat(linkedResources);
-        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-          resourceData = _ref2[_j];
+      ref1 = response.linked;
+      for (typeName in ref1) {
+        linkedResources = ref1[typeName];
+        ref2 = [].concat(linkedResources);
+        for (j = 0, len1 = ref2.length; j < len1; j++) {
+          resourceData = ref2[j];
           this.type(typeName).create(resourceData, headers, response.meta);
         }
       }
     }
     results = [];
     if ('data' in response) {
-      _ref3 = [].concat(response.data);
-      for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
-        resourceData = _ref3[_k];
+      ref3 = [].concat(response.data);
+      for (k = 0, len2 = ref3.length; k < len2; k++) {
+        resourceData = ref3[k];
         results.push(this.type(resourceData.type).create(resourceData, headers, response.meta));
       }
     } else {
       for (typeName in response) {
         resources = response[typeName];
-        if (__indexOf.call(RESERVED_TOP_LEVEL_KEYS, typeName) < 0) {
-          _ref4 = [].concat(resources);
-          for (_l = 0, _len3 = _ref4.length; _l < _len3; _l++) {
-            resourceData = _ref4[_l];
+        if (indexOf.call(RESERVED_TOP_LEVEL_KEYS, typeName) < 0) {
+          ref4 = [].concat(resources);
+          for (l = 0, len3 = ref4.length; l < len3; l++) {
+            resourceData = ref4[l];
             results.push(this.type(typeName).create(resourceData, headers, response.meta));
           }
         }
@@ -226,41 +226,41 @@ JSONAPIClient = (function() {
   };
 
   JSONAPIClient.prototype._getHeadersFor = function(request) {
-    var headers, key, pair, value, _j, _len1, _ref1, _ref2;
+    var headers, j, key, len1, pair, ref1, ref2, value;
     headers = {};
-    _ref1 = request.getAllResponseHeaders().split('\n');
-    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-      pair = _ref1[_j];
+    ref1 = request.getAllResponseHeaders().split('\n');
+    for (j = 0, len1 = ref1.length; j < len1; j++) {
+      pair = ref1[j];
       if (!(pair !== '')) {
         continue;
       }
-      _ref2 = pair.split(':'), key = _ref2[0], value = 2 <= _ref2.length ? __slice.call(_ref2, 1) : [];
+      ref2 = pair.split(':'), key = ref2[0], value = 2 <= ref2.length ? slice.call(ref2, 1) : [];
       headers[key.trim()] = value.join(':').trim();
     }
     return headers;
   };
 
   JSONAPIClient.prototype._handleLinks = function(links) {
-    var attributeName, href, link, type, typeAndAttribute, typeName, _ref1, _results;
-    _results = [];
+    var attributeName, href, link, ref1, results1, type, typeAndAttribute, typeName;
+    results1 = [];
     for (typeAndAttribute in links) {
       link = links[typeAndAttribute];
-      _ref1 = typeAndAttribute.split('.'), typeName = _ref1[0], attributeName = _ref1[1];
+      ref1 = typeAndAttribute.split('.'), typeName = ref1[0], attributeName = ref1[1];
       if (typeof link === 'string') {
         href = link;
       } else {
         href = link.href, type = link.type;
       }
-      _results.push(this._handleLink(typeName, attributeName, href, type));
+      results1.push(this._handleLink(typeName, attributeName, href, type));
     }
-    return _results;
+    return results1;
   };
 
   JSONAPIClient.prototype._handleLink = function(typeName, attributeName, hrefTemplate, attributeTypeName) {
-    var type, _base;
+    var base, type;
     type = this.type(typeName);
-    if ((_base = type._links)[attributeName] == null) {
-      _base[attributeName] = {};
+    if ((base = type._links)[attributeName] == null) {
+      base[attributeName] = {};
     }
     if (hrefTemplate != null) {
       type._links[attributeName].href = hrefTemplate;
@@ -275,16 +275,16 @@ JSONAPIClient = (function() {
   };
 
   JSONAPIClient.prototype.type = function(name) {
-    var _base;
-    if ((_base = this._typesCache)[name] == null) {
-      _base[name] = new Type(name, this);
+    var base;
+    if ((base = this._typesCache)[name] == null) {
+      base[name] = new Type(name, this);
     }
     return this._typesCache[name];
   };
 
   JSONAPIClient.prototype.createType = function() {
     if (typeof console !== "undefined" && console !== null) {
-      console.warn.apply(console, ['Use JSONAPIClient::type, not ::createType'].concat(__slice.call(arguments)));
+      console.warn.apply(console, ['Use JSONAPIClient::type, not ::createType'].concat(slice.call(arguments)));
     }
     return this.type.apply(this, arguments);
   };
@@ -330,14 +330,15 @@ module.exports = function(method, url, data, headers, modify) {
   method = method.toUpperCase();
   if (method === 'GET') {
     if ((data != null) && Object.keys(data).length !== 0) {
-      url += '?' + ((function() {
-        var _results;
-        _results = [];
+      url += url.indexOf('?') === -1 ? '?' : '&';
+      url += ((function() {
+        var results;
+        results = [];
         for (key in data) {
           value = data[key];
-          _results.push([key, value].join('='));
+          results.push([key, value].join('='));
         }
-        return _results;
+        return results;
       })()).join('&');
       data = null;
     }
@@ -345,7 +346,7 @@ module.exports = function(method, url, data, headers, modify) {
   }
   if (promise == null) {
     promise = new Promise(function(resolve, reject) {
-      var header, request, _ref;
+      var header, ref, request;
       request = new XMLHttpRequest;
       request.open(method, encodeURI(url));
       request.withCredentials = true;
@@ -361,9 +362,9 @@ module.exports = function(method, url, data, headers, modify) {
         modify(request);
       }
       request.onreadystatechange = function(e) {
-        var _ref;
+        var ref;
         if (request.readyState === request.DONE) {
-          if ((200 <= (_ref = request.status) && _ref < 300)) {
+          if ((200 <= (ref = request.status) && ref < 300)) {
             if (method === 'GET') {
               setTimeout((function() {
                 return delete cachedGets[url];
@@ -380,7 +381,7 @@ module.exports = function(method, url, data, headers, modify) {
           }
         }
       };
-      if ((data != null) && (headers != null ? (_ref = headers['Content-Type']) != null ? _ref.indexOf('json') : void 0 : void 0) !== -1) {
+      if ((data != null) && (headers != null ? (ref = headers['Content-Type']) != null ? ref.indexOf('json') : void 0 : void 0) !== -1) {
         data = JSON.stringify(data);
       }
       return request.send(data);
@@ -395,16 +396,16 @@ module.exports = function(method, url, data, headers, modify) {
 
 
 },{}],4:[function(_dereq_,module,exports){
-var __hasProp = {}.hasOwnProperty;
+var hasProp = {}.hasOwnProperty;
 
 module.exports = function() {
-  var argument, key, value, _i, _len, _ref;
-  _ref = Array.prototype.slice.call(arguments, 1);
-  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-    argument = _ref[_i];
+  var argument, i, key, len, ref, value;
+  ref = Array.prototype.slice.call(arguments, 1);
+  for (i = 0, len = ref.length; i < len; i++) {
+    argument = ref[i];
     if (argument != null) {
       for (key in argument) {
-        if (!__hasProp.call(argument, key)) continue;
+        if (!hasProp.call(argument, key)) continue;
         value = argument[key];
         arguments[0][key] = value;
       }
@@ -417,10 +418,10 @@ module.exports = function() {
 
 },{}],5:[function(_dereq_,module,exports){
 var Emitter, Model, isIndex, mergeInto, removeUnderscoredKeys,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  __slice = [].slice,
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty,
+  slice = [].slice,
+  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 Emitter = _dereq_('./emitter');
 
@@ -433,14 +434,14 @@ isIndex = function(string) {
 };
 
 removeUnderscoredKeys = function(target) {
-  var key, results, value, _i, _len, _results;
+  var i, key, len, results, results1, value;
   if (Array.isArray(target)) {
-    _results = [];
-    for (_i = 0, _len = target.length; _i < _len; _i++) {
-      value = target[_i];
-      _results.push(removeUnderscoredKeys(value));
+    results1 = [];
+    for (i = 0, len = target.length; i < len; i++) {
+      value = target[i];
+      results1.push(removeUnderscoredKeys(value));
     }
-    return _results;
+    return results1;
   } else if ((target != null) && typeof target === 'object') {
     results = {};
     for (key in target) {
@@ -455,42 +456,42 @@ removeUnderscoredKeys = function(target) {
   }
 };
 
-module.exports = Model = (function(_super) {
-  __extends(Model, _super);
+module.exports = Model = (function(superClass) {
+  extend(Model, superClass);
 
   Model.prototype._changedKeys = null;
 
   function Model() {
     var configs;
-    configs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    configs = 1 <= arguments.length ? slice.call(arguments, 0) : [];
     Model.__super__.constructor.apply(this, arguments);
     this._changedKeys = [];
-    mergeInto.apply(null, [this].concat(__slice.call(configs)));
+    mergeInto.apply(null, [this].concat(slice.call(configs)));
     this.emit('create');
   }
 
   Model.prototype.update = function(changeSet) {
-    var base, key, lastKey, path, rootKey, value, _i, _len, _name, _ref;
+    var base, i, key, lastKey, len, name, path, ref, rootKey, value;
     if (changeSet == null) {
       changeSet = {};
     }
     if (typeof changeSet === 'string') {
-      for (_i = 0, _len = arguments.length; _i < _len; _i++) {
-        key = arguments[_i];
-        if (__indexOf.call(this._changedKeys, key) < 0) {
-          (_ref = this._changedKeys).push.apply(_ref, arguments);
+      for (i = 0, len = arguments.length; i < len; i++) {
+        key = arguments[i];
+        if (indexOf.call(this._changedKeys, key) < 0) {
+          (ref = this._changedKeys).push.apply(ref, arguments);
         }
       }
     } else {
       for (key in changeSet) {
-        if (!__hasProp.call(changeSet, key)) continue;
+        if (!hasProp.call(changeSet, key)) continue;
         value = changeSet[key];
         path = key.split('.');
         rootKey = path[0];
         base = this;
         while (path.length !== 1) {
-          if (base[_name = path[0]] == null) {
-            base[_name] = isIndex(path[0]) ? [] : {};
+          if (base[name = path[0]] == null) {
+            base[name] = isIndex(path[0]) ? [] : {};
           }
           base = base[path.shift()];
         }
@@ -504,7 +505,7 @@ module.exports = Model = (function(_super) {
         } else {
           base[lastKey] = value;
         }
-        if (__indexOf.call(this._changedKeys, rootKey) < 0) {
+        if (indexOf.call(this._changedKeys, rootKey) < 0) {
           this._changedKeys.push(rootKey);
         }
       }
@@ -534,17 +535,17 @@ module.exports = Model = (function(_super) {
 
 },{"./emitter":1,"./merge-into":4}],6:[function(_dereq_,module,exports){
 var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  __slice = [].slice,
-  __modulo = function(a, b) { return (+a % (b = +b) + b) % b; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty,
+  slice = [].slice,
+  modulo = function(a, b) { return (+a % (b = +b) + b) % b; };
 
 Model = _dereq_('./model');
 
 PLACEHOLDERS_PATTERN = /{(.+?)}/g;
 
-Resource = (function(_super) {
-  __extends(Resource, _super);
+Resource = (function(superClass) {
+  extend(Resource, superClass);
 
   Resource.prototype._type = null;
 
@@ -594,9 +595,9 @@ Resource = (function(_super) {
       };
     })(this)) : this._type._client.post(this._type._getURL(), payload);
     return new ResourcePromise(save.then((function(_this) {
-      return function(_arg) {
+      return function(arg) {
         var result;
-        result = _arg[0];
+        result = arg[0];
         if (result !== _this) {
           _this.update(result);
           _this._changedKeys.splice(0);
@@ -609,11 +610,11 @@ Resource = (function(_super) {
   };
 
   Resource.prototype.getChangesSinceSave = function() {
-    var changes, key, _i, _len, _ref;
+    var changes, i, key, len, ref;
     changes = {};
-    _ref = this._changedKeys;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      key = _ref[_i];
+    ref = this._changedKeys;
+    for (i = 0, len = ref.length; i < len; i++) {
+      key = ref[i];
       changes[key] = this[key];
     }
     return changes;
@@ -661,29 +662,28 @@ Resource = (function(_super) {
     })(this)));
   };
 
-  Resource.prototype.get = function(name, _arg) {
-    var href, id, ids, resourceLink, result, skipCache, type, typeLink, _ref;
-    skipCache = (_arg != null ? _arg : {}).skipCache;
-    if ((this._linksCache[name] != null) && !skipCache) {
+  Resource.prototype.get = function(name, query) {
+    var href, id, ids, ref, resourceLink, result, type, typeLink;
+    if ((this._linksCache[name] != null) && (query == null)) {
       return this._linksCache[name];
     } else {
-      resourceLink = (_ref = this.links) != null ? _ref[name] : void 0;
+      resourceLink = (ref = this.links) != null ? ref[name] : void 0;
       typeLink = this._type._links[name];
       result = (function() {
-        var _ref1, _ref2, _ref3, _ref4;
+        var ref1, ref2, ref3, ref4;
         if ((resourceLink != null) || (typeLink != null)) {
-          href = (_ref1 = resourceLink != null ? resourceLink.href : void 0) != null ? _ref1 : typeLink != null ? typeLink.href : void 0;
-          type = (_ref2 = resourceLink != null ? resourceLink.type : void 0) != null ? _ref2 : typeLink != null ? typeLink.type : void 0;
-          id = (_ref3 = resourceLink != null ? resourceLink.id : void 0) != null ? _ref3 : typeLink != null ? typeLink.id : void 0;
+          href = (ref1 = resourceLink != null ? resourceLink.href : void 0) != null ? ref1 : typeLink != null ? typeLink.href : void 0;
+          type = (ref2 = resourceLink != null ? resourceLink.type : void 0) != null ? ref2 : typeLink != null ? typeLink.type : void 0;
+          id = (ref3 = resourceLink != null ? resourceLink.id : void 0) != null ? ref3 : typeLink != null ? typeLink.id : void 0;
           if (id == null) {
             id = typeof resourceLink === 'string' ? resourceLink : void 0;
           }
-          ids = (_ref4 = resourceLink != null ? resourceLink.ids : void 0) != null ? _ref4 : typeLink != null ? typeLink.ids : void 0;
+          ids = (ref4 = resourceLink != null ? resourceLink.ids : void 0) != null ? ref4 : typeLink != null ? typeLink.ids : void 0;
           if (ids == null) {
             ids = Array.isArray(resourceLink) ? resourceLink : void 0;
           }
           if (href != null) {
-            return this._type._client.get(this._applyHREF(href)).then(function(links) {
+            return this._type._client.get(this._applyHREF(href), query).then(function(links) {
               if (id != null) {
                 return links[0];
               } else {
@@ -691,7 +691,7 @@ Resource = (function(_super) {
               }
             });
           } else if (type != null) {
-            return this._type._client.type(type).get(id != null ? id : ids).then(function(links) {
+            return this._type._client.type(type).get(id != null ? id : ids, query).then(function(links) {
               if (id != null) {
                 return links[0];
               } else {
@@ -719,12 +719,12 @@ Resource = (function(_super) {
     context = {};
     context[this._type._name] = this;
     return href.replace(PLACEHOLDERS_PATTERN, function(_, path) {
-      var segment, segments, value, _ref, _ref1;
+      var ref, ref1, segment, segments, value;
       segments = path.split('.');
       value = context;
       while (segments.length !== 0) {
         segment = segments.shift();
-        value = (_ref = value[segment]) != null ? _ref : (_ref1 = value.links) != null ? _ref1[segment] : void 0;
+        value = (ref = value[segment]) != null ? ref : (ref1 = value.links) != null ? ref1[segment] : void 0;
       }
       if (Array.isArray(value)) {
         value = value.join(',');
@@ -775,34 +775,34 @@ Resource = (function(_super) {
     var name, value;
     header = header.toLowerCase();
     return ((function() {
-      var _ref, _results;
-      _ref = this._headers;
-      _results = [];
-      for (name in _ref) {
-        value = _ref[name];
+      var ref, results1;
+      ref = this._headers;
+      results1 = [];
+      for (name in ref) {
+        value = ref[name];
         if (name.toLowerCase() === header) {
-          _results.push(value);
+          results1.push(value);
         }
       }
-      return _results;
+      return results1;
     }).call(this))[0];
   };
 
   Resource.prototype._getURL = function() {
-    var _ref;
-    return this.href || (_ref = this._type)._getURL.apply(_ref, [this.id].concat(__slice.call(arguments)));
+    var ref;
+    return this.href || (ref = this._type)._getURL.apply(ref, [this.id].concat(slice.call(arguments)));
   };
 
   Resource.prototype.link = function() {
     if (typeof console !== "undefined" && console !== null) {
-      console.warn.apply(console, ['Use Resource::get, not ::link'].concat(__slice.call(arguments)));
+      console.warn.apply(console, ['Use Resource::get, not ::link'].concat(slice.call(arguments)));
     }
     return this.get.apply(this, arguments);
   };
 
   Resource.prototype.getRequestMeta = function() {
     if (typeof console !== "undefined" && console !== null) {
-      console.warn.apply(console, ['Use Resource::getMeta, not ::getRequestMeta'].concat(__slice.call(arguments)));
+      console.warn.apply(console, ['Use Resource::getMeta, not ::getRequestMeta'].concat(slice.call(arguments)));
     }
     return this.getMeta.apply(this, arguments);
   };
@@ -812,7 +812,7 @@ Resource = (function(_super) {
 })(Model);
 
 ResourcePromise = (function() {
-  var method, methodName, _ref;
+  var method, methodName, ref;
 
   ResourcePromise.prototype._promise = null;
 
@@ -824,47 +824,47 @@ ResourcePromise = (function() {
   }
 
   ResourcePromise.prototype.then = function() {
-    var _ref;
-    return (_ref = this._promise).then.apply(_ref, arguments);
+    var ref;
+    return (ref = this._promise).then.apply(ref, arguments);
   };
 
   ResourcePromise.prototype["catch"] = function() {
-    var _ref;
-    return (_ref = this._promise)["catch"].apply(_ref, arguments);
+    var ref;
+    return (ref = this._promise)["catch"].apply(ref, arguments);
   };
 
   ResourcePromise.prototype.index = function(index) {
     this._promise = this._promise.then(function(value) {
-      index = __modulo(index, value.length);
+      index = modulo(index, value.length);
       return value[index];
     });
     return this;
   };
 
-  _ref = Resource.prototype;
-  for (methodName in _ref) {
-    method = _ref[methodName];
+  ref = Resource.prototype;
+  for (methodName in ref) {
+    method = ref[methodName];
     if (typeof method === 'function' && !(methodName in ResourcePromise.prototype)) {
       (function(methodName) {
         return ResourcePromise.prototype[methodName] = function() {
           var args;
-          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
           this._promise = this._promise.then((function(_this) {
             return function(promisedValue) {
               var resource, result, results;
               results = (function() {
-                var _i, _len, _ref1, _results;
-                _ref1 = [].concat(promisedValue);
-                _results = [];
-                for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-                  resource = _ref1[_i];
+                var i, len, ref1, results1;
+                ref1 = [].concat(promisedValue);
+                results1 = [];
+                for (i = 0, len = ref1.length; i < len; i++) {
+                  resource = ref1[i];
                   result = resource[methodName].apply(resource, args);
                   if (result instanceof this.constructor) {
                     result = result._promise;
                   }
-                  _results.push(result);
+                  results1.push(result);
                 }
-                return _results;
+                return results1;
               }).call(_this);
               if (Array.isArray(promisedValue)) {
                 return Promise.all(results);
@@ -891,9 +891,9 @@ module.exports.Promise = ResourcePromise;
 
 },{"./model":5}],7:[function(_dereq_,module,exports){
 var Emitter, Resource, Type, mergeInto,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  __slice = [].slice;
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty,
+  slice = [].slice;
 
 Emitter = _dereq_('./emitter');
 
@@ -901,8 +901,8 @@ Resource = _dereq_('./resource');
 
 mergeInto = _dereq_('./merge-into');
 
-module.exports = Type = (function(_super) {
-  __extends(Type, _super);
+module.exports = Type = (function(superClass) {
+  extend(Type, superClass);
 
   Type.prototype.Resource = Resource;
 
@@ -926,7 +926,7 @@ module.exports = Type = (function(_super) {
   }
 
   Type.prototype.create = function(data, headers, meta) {
-    var resource, _ref, _ref1;
+    var ref, ref1, resource;
     if (data == null) {
       data = {};
     }
@@ -937,9 +937,9 @@ module.exports = Type = (function(_super) {
       meta = {};
     }
     if (data.type && data.type !== this._name) {
-      return (_ref = this._client.type(data.type)).create.apply(_ref, arguments);
+      return (ref = this._client.type(data.type)).create.apply(ref, arguments);
     } else {
-      resource = (_ref1 = this._resourcesCache[data.id]) != null ? _ref1 : new this.Resource(this);
+      resource = (ref1 = this._resourcesCache[data.id]) != null ? ref1 : new this.Resource(this);
       mergeInto(resource._headers, headers);
       mergeInto(resource._meta, meta);
       resource.update(data);
@@ -956,50 +956,50 @@ module.exports = Type = (function(_super) {
 
   Type.prototype._getByID = function() {
     var id, otherArgs;
-    id = arguments[0], otherArgs = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-    return this._getByIDs.apply(this, [[id]].concat(__slice.call(otherArgs))).then(function(_arg) {
+    id = arguments[0], otherArgs = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+    return this._getByIDs.apply(this, [[id]].concat(slice.call(otherArgs))).then(function(arg) {
       var resource;
-      resource = _arg[0];
+      resource = arg[0];
       return resource;
     });
   };
 
   Type.prototype._getByIDs = function() {
     var id, ids, otherArgs, requests;
-    ids = arguments[0], otherArgs = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+    ids = arguments[0], otherArgs = 2 <= arguments.length ? slice.call(arguments, 1) : [];
     requests = (function() {
-      var _i, _len, _ref, _results;
-      _results = [];
-      for (_i = 0, _len = ids.length; _i < _len; _i++) {
-        id = ids[_i];
+      var i, len, ref, results;
+      results = [];
+      for (i = 0, len = ids.length; i < len; i++) {
+        id = ids[i];
         if (id in this._resourcesCache && otherArgs.length === 0) {
-          _results.push(Promise.resolve(this._resourcesCache[id]));
+          results.push(Promise.resolve(this._resourcesCache[id]));
         } else {
-          _results.push((_ref = this._client).get.apply(_ref, [this._getURL(id)].concat(__slice.call(otherArgs))).then(function(_arg) {
+          results.push((ref = this._client).get.apply(ref, [this._getURL(id)].concat(slice.call(otherArgs))).then(function(arg) {
             var resource;
-            resource = _arg[0];
+            resource = arg[0];
             return resource;
           }));
         }
       }
-      return _results;
+      return results;
     }).call(this);
     return Promise.all(requests);
   };
 
   Type.prototype._getByQuery = function() {
-    var otherArgs, query, _ref;
-    query = arguments[0], otherArgs = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-    return (_ref = this._client).get.apply(_ref, [this._getURL(), query].concat(__slice.call(otherArgs)));
+    var otherArgs, query, ref;
+    query = arguments[0], otherArgs = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+    return (ref = this._client).get.apply(ref, [this._getURL(), query].concat(slice.call(otherArgs)));
   };
 
   Type.prototype._getURL = function() {
-    return ['', this._name].concat(__slice.call(arguments)).join('/');
+    return ['', this._name].concat(slice.call(arguments)).join('/');
   };
 
   Type.prototype.createResource = function() {
     if (typeof console !== "undefined" && console !== null) {
-      console.warn.apply(console, ['Use Type::create, not ::createResource'].concat(__slice.call(arguments)));
+      console.warn.apply(console, ['Use Type::create, not ::createResource'].concat(slice.call(arguments)));
     }
     return this.create.apply(this, arguments);
   };
