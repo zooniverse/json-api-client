@@ -945,6 +945,7 @@ module.exports = Type = (function(superClass) {
       resource.update(data);
       if (resource === this._resourcesCache[data.id]) {
         resource._changedKeys.splice(0);
+        resource.emit('change');
       }
       return resource;
     }

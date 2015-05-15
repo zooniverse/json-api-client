@@ -29,6 +29,7 @@ module.exports = class Type extends Emitter
       resource.update data
       if resource is @_resourcesCache[data.id]
         resource._changedKeys.splice 0
+        resource.emit 'change'
       resource
 
   get: ->
