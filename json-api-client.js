@@ -663,48 +663,25 @@ Resource = (function(superClass) {
   };
 
   Resource.prototype.get = function(name, query) {
-    var href, id, ids, ref, resourceLink, result, type, typeLink;
+    var href, id, ids, ref, ref1, ref2, ref3, ref4, resourceLink, result, type, typeLink;
     if ((this._linksCache[name] != null) && (query == null)) {
       return this._linksCache[name];
     } else {
       resourceLink = (ref = this.links) != null ? ref[name] : void 0;
       typeLink = this._type._links[name];
-      result = (function() {
-        var ref1, ref2, ref3, ref4;
-        if ((resourceLink != null) || (typeLink != null)) {
-          href = (ref1 = resourceLink != null ? resourceLink.href : void 0) != null ? ref1 : typeLink != null ? typeLink.href : void 0;
-          type = (ref2 = resourceLink != null ? resourceLink.type : void 0) != null ? ref2 : typeLink != null ? typeLink.type : void 0;
-          id = (ref3 = resourceLink != null ? resourceLink.id : void 0) != null ? ref3 : typeLink != null ? typeLink.id : void 0;
-          if (id == null) {
-            id = typeof resourceLink === 'string' ? resourceLink : void 0;
-          }
-          ids = (ref4 = resourceLink != null ? resourceLink.ids : void 0) != null ? ref4 : typeLink != null ? typeLink.ids : void 0;
-          if (ids == null) {
-            ids = Array.isArray(resourceLink) ? resourceLink : void 0;
-          }
-          if (href != null) {
-            return this._type._client.get(this._applyHREF(href), query).then(function(links) {
-              if (id != null) {
-                return links[0];
-              } else {
-                return links;
-              }
-            });
-          } else if (type != null) {
-            return this._type._client.type(type).get(id != null ? id : ids, query).then(function(links) {
-              if (id != null) {
-                return links[0];
-              } else {
-                return links;
-              }
-            });
-          }
-        } else if (name in this) {
-          return Promise.resolve(this[name]);
+      result = (resourceLink != null) || (typeLink != null) ? (href = (ref1 = resourceLink != null ? resourceLink.href : void 0) != null ? ref1 : typeLink != null ? typeLink.href : void 0, type = (ref2 = resourceLink != null ? resourceLink.type : void 0) != null ? ref2 : typeLink != null ? typeLink.type : void 0, id = (ref3 = resourceLink != null ? resourceLink.id : void 0) != null ? ref3 : typeLink != null ? typeLink.id : void 0, id != null ? id : id = typeof resourceLink === 'string' ? resourceLink : void 0, ids = (ref4 = resourceLink != null ? resourceLink.ids : void 0) != null ? ref4 : typeLink != null ? typeLink.ids : void 0, ids != null ? ids : ids = Array.isArray(resourceLink) ? resourceLink : void 0, href != null ? this._type._client.get(this._applyHREF(href), query).then(function(links) {
+        if (id != null) {
+          return links[0];
         } else {
-          throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
+          return links;
         }
-      }).call(this);
+      }) : type != null ? this._type._client.type(type).get(id != null ? id : ids, query).then(function(links) {
+        if (id != null) {
+          return links[0];
+        } else {
+          return links;
+        }
+      }) : void 0) : name in this ? Promise.resolve(this[name]) : this._type._client.get(this._getURL(name));
       result.then((function(_this) {
         return function() {
           return _this._linksCache[name] = result;
@@ -790,7 +767,11 @@ Resource = (function(superClass) {
 
   Resource.prototype._getURL = function() {
     var ref;
-    return this.href || (ref = this._type)._getURL.apply(ref, [this.id].concat(slice.call(arguments)));
+    if (this.href) {
+      return [this.href].concat(slice.call(arguments)).join('/');
+    } else {
+      return (ref = this._type)._getURL.apply(ref, [this.id].concat(slice.call(arguments)));
+    }
   };
 
   Resource.prototype.link = function() {

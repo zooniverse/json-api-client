@@ -121,7 +121,7 @@ class Resource extends Model
         Promise.resolve @[name]
 
       else
-        throw new Error "No link '#{name}' defined for #{@_type._name}##{@id}"
+        @_type._client.get @_getURL name
 
       result.then =>
         @_linksCache[name] = result
@@ -176,7 +176,10 @@ class Resource extends Model
     (value for name, value of @_headers when name.toLowerCase() is header)[0]
 
   _getURL: ->
-    @href || @_type._getURL @id, arguments...
+    if @href
+      [@href, arguments...].join '/'
+    else
+      @_type._getURL @id, arguments...
 
   link: ->
     console?.warn 'Use Resource::get, not ::link', arguments...
