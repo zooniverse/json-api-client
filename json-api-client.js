@@ -698,11 +698,11 @@ Resource = (function(superClass) {
                 return links;
               }
             });
-          } else if (name in this) {
-            return Promise.resolve(this[name]);
-          } else {
-            throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
           }
+        } else if (name in this) {
+          return Promise.resolve(this[name]);
+        } else {
+          throw new Error("No link '" + name + "' defined for " + this._type._name + "#" + this.id);
         }
       }).call(this);
       result.then((function(_this) {

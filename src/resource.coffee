@@ -117,11 +117,11 @@ class Resource extends Model
             else
               links
 
-        else if name of this
-          Promise.resolve @[name]
+      else if name of this
+        Promise.resolve @[name]
 
-        else
-          throw new Error "No link '#{name}' defined for #{@_type._name}##{@id}"
+      else
+        throw new Error "No link '#{name}' defined for #{@_type._name}##{@id}"
 
       result.then =>
         @_linksCache[name] = result
