@@ -630,7 +630,7 @@ Resource = (function(superClass) {
         };
       })(this));
     } else if (this.id) {
-      return this._type.get(this.id, {});
+      return this._type._client.get(this._getURL());
     } else {
       throw new Error('Can\'t refresh a resource with no ID');
     }

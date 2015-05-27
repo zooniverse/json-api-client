@@ -59,7 +59,7 @@ class Resource extends Model
       @refresh().then =>
         @update changes
     else if @id
-      @_type.get @id, {}
+      @_type._client.get @_getURL()
     else
       throw new Error 'Can\'t refresh a resource with no ID'
 
