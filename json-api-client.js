@@ -555,6 +555,8 @@ Resource = (function(superClass) {
 
   Resource.prototype._linksCache = null;
 
+  Resource.prototype._write = Promise.resolve();
+
   function Resource(_type) {
     this._type = _type;
     if (this._type == null) {
@@ -586,27 +588,33 @@ Resource = (function(superClass) {
   };
 
   Resource.prototype.save = function() {
-    var payload, save;
+    var payload;
     payload = {};
     payload[this._type._name] = this.toJSON.call(this.getChangesSinceSave());
-    save = this.id ? this.refresh(true).then((function(_this) {
+    this._write = this._write["catch"]((function(_this) {
       return function() {
-        return _this._type._client.put(_this._getURL(), payload, _this._getHeadersForModification());
+        return null;
       };
-    })(this)) : this._type._client.post(this._type._getURL(), payload);
-    return new ResourcePromise(save.then((function(_this) {
-      return function(arg) {
-        var result;
-        result = arg[0];
-        if (result !== _this) {
-          _this.update(result);
-          _this._changedKeys.splice(0);
-          result.destroy();
-        }
-        _this.emit('save');
-        return _this;
+    })(this)).then((function(_this) {
+      return function() {
+        var save;
+        save = _this.id ? _this.refresh(true).then(function() {
+          return _this._type._client.put(_this._getURL(), payload, _this._getHeadersForModification());
+        }) : _this._type._client.post(_this._type._getURL(), payload);
+        return new ResourcePromise(save.then(function(arg) {
+          var result;
+          result = arg[0];
+          if (result !== _this) {
+            _this.update(result);
+            _this._changedKeys.splice(0);
+            result.destroy();
+          }
+          _this.emit('save');
+          return _this;
+        }));
       };
-    })(this)));
+    })(this));
+    return this._write;
   };
 
   Resource.prototype.getChangesSinceSave = function() {
@@ -646,20 +654,25 @@ Resource = (function(superClass) {
   };
 
   Resource.prototype["delete"] = function() {
-    var deletion;
-    deletion = this.id ? this.refresh(true).then((function(_this) {
+    this._write = this._write["catch"]((function(_this) {
       return function() {
-        return _this._type._client["delete"](_this._getURL(), null, _this._getHeadersForModification());
-      };
-    })(this)) : Promise.resolve();
-    return new ResourcePromise(deletion.then((function(_this) {
-      return function() {
-        _this.emit('delete');
-        _this._type.emit('change');
-        _this.destroy();
         return null;
       };
-    })(this)));
+    })(this)).then((function(_this) {
+      return function() {
+        var deletion;
+        deletion = _this.id ? _this.refresh(true).then(function() {
+          return _this._type._client["delete"](_this._getURL(), null, _this._getHeadersForModification());
+        }) : Promise.resolve();
+        return new ResourcePromise(deletion.then(function() {
+          _this.emit('delete');
+          _this._type.emit('change');
+          _this.destroy();
+          return null;
+        }));
+      };
+    })(this));
+    return this._write;
   };
 
   Resource.prototype.get = function(name, query) {

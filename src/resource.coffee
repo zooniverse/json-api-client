@@ -8,6 +8,7 @@ class Resource extends Model
   _headers: null
   _meta: null
   _linksCache: null
+  _write: Promise.resolve()
 
   constructor: (@_type) ->
     unless @_type?
@@ -33,19 +34,24 @@ class Resource extends Model
     payload = {}
     payload[@_type._name] = @toJSON.call @getChangesSinceSave()
 
-    save = if @id
-      @refresh(true).then =>
-        @_type._client.put @_getURL(), payload, @_getHeadersForModification()
-    else
-      @_type._client.post @_type._getURL(), payload
+    @_write = @_write
+      .catch =>
+        null
+      .then =>
+        save = if @id
+          @refresh(true).then =>
+            @_type._client.put @_getURL(), payload, @_getHeadersForModification()
+        else
+          @_type._client.post @_type._getURL(), payload
 
-    new ResourcePromise save.then ([result]) =>
-      unless result is this
-        @update result
-        @_changedKeys.splice 0
-        result.destroy()
-      @emit 'save'
-      this
+        new ResourcePromise save.then ([result]) =>
+          unless result is this
+            @update result
+            @_changedKeys.splice 0
+            result.destroy()
+          @emit 'save'
+          this
+    @_write
 
   getChangesSinceSave: ->
     changes = {}
@@ -71,17 +77,22 @@ class Resource extends Model
       throw new Error 'Can\'t uncache a resource with no ID'
 
   delete: ->
-    deletion = if @id
-      @refresh(true).then =>
-        @_type._client.delete @_getURL(), null, @_getHeadersForModification()
-    else
-      Promise.resolve()
+    @_write = @_write
+      .catch =>
+        null
+      .then =>
+        deletion = if @id
+          @refresh(true).then =>
+            @_type._client.delete @_getURL(), null, @_getHeadersForModification()
+        else
+          Promise.resolve()
 
-    new ResourcePromise deletion.then =>
-      @emit 'delete'
-      @_type.emit 'change'
-      @destroy()
-      null
+        new ResourcePromise deletion.then =>
+          @emit 'delete'
+          @_type.emit 'change'
+          @destroy()
+          null
+    @_write
 
   get: (name, query) ->
     if @_linksCache[name]? and not query?
