@@ -26,7 +26,9 @@ module.exports = class Type extends Emitter
       resource = @_resourcesCache[data.id] ? new @Resource this
       mergeInto resource._headers, headers
       mergeInto resource._meta, meta
+      moreRecentChanges = resource.getChangesSinceSave()
       resource.update data
+      resource.update moreRecentChanges
       if resource is @_resourcesCache[data.id]
         resource._changedKeys.splice 0
         resource.emit 'change'

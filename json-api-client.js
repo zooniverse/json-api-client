@@ -907,7 +907,7 @@ module.exports = Type = (function(superClass) {
   }
 
   Type.prototype.create = function(data, headers, meta) {
-    var ref, ref1, resource;
+    var moreRecentChanges, ref, ref1, resource;
     if (data == null) {
       data = {};
     }
@@ -923,7 +923,9 @@ module.exports = Type = (function(superClass) {
       resource = (ref1 = this._resourcesCache[data.id]) != null ? ref1 : new this.Resource(this);
       mergeInto(resource._headers, headers);
       mergeInto(resource._meta, meta);
+      moreRecentChanges = resource.getChangesSinceSave();
       resource.update(data);
+      resource.update(moreRecentChanges);
       if (resource === this._resourcesCache[data.id]) {
         resource._changedKeys.splice(0);
         resource.emit('change');
