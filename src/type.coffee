@@ -48,7 +48,7 @@ module.exports = class Type extends Emitter
 
   _getByIDs: (ids, otherArgs...) ->
     requests = for id in ids
-      if id of @_resourcesCache and otherArgs.length is 0
+      if id of @_resourcesCache and (otherArgs.length is 0 or not otherArgs[0]?)
         Promise.resolve @_resourcesCache[id]
       else
         @_client.get(@_getURL(id), otherArgs...).then ([resource]) ->

@@ -27,6 +27,7 @@ class Resource extends Model
     value = super
     if @id and @_type._resourcesCache[@id] isnt this
       @_type._resourcesCache[@id] = this
+      @_type._resourcesCache[@href] = this if @href?
       @_type.emit 'change'
     value
 
@@ -73,6 +74,7 @@ class Resource extends Model
     if @id
       @emit 'uncache'
       delete @_type._resourcesCache[@id]
+      delete @_type._resourcesCache[@href]
     else
       throw new Error 'Can\'t uncache a resource with no ID'
 
@@ -115,11 +117,17 @@ class Resource extends Model
           resourceLink
 
         if href?
-          @_type._client.get(@_applyHREF(href), query).then (links) ->
-            if id?
-              links[0]
-            else
-              links
+          fullHREF = @_applyHREF(href)
+          cachedByHREF = @_type._client.type(type)._resourcesCache[fullHREF]
+
+          if cachedByHREF? and not query?
+            Promise.resolve(cachedByHREF)
+          else
+            @_type._client.get(fullHREF, query).then (links) ->
+              if id?
+                links[0]
+              else
+                links
 
         else if type?
           @_type._client.type(type).get(id ? ids, query).then (links) ->
