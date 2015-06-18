@@ -686,7 +686,7 @@ Resource = (function(superClass) {
     } else {
       resourceLink = (ref = this.links) != null ? ref[name] : void 0;
       typeLink = this._type._links[name];
-      result = (resourceLink != null) || (typeLink != null) ? (href = (ref1 = resourceLink != null ? resourceLink.href : void 0) != null ? ref1 : typeLink != null ? typeLink.href : void 0, type = (ref2 = resourceLink != null ? resourceLink.type : void 0) != null ? ref2 : typeLink != null ? typeLink.type : void 0, id = (ref3 = resourceLink != null ? resourceLink.id : void 0) != null ? ref3 : typeLink != null ? typeLink.id : void 0, id != null ? id : id = typeof resourceLink === 'string' ? resourceLink : void 0, ids = (ref4 = resourceLink != null ? resourceLink.ids : void 0) != null ? ref4 : typeLink != null ? typeLink.ids : void 0, ids != null ? ids : ids = Array.isArray(resourceLink) ? resourceLink : void 0, type === 'users' ? href = null : void 0, href != null ? (fullHREF = this._applyHREF(href), cachedByHREF = this._type._client.type(type)._resourcesCache[fullHREF], (cachedByHREF != null) && (query == null) ? Promise.resolve(cachedByHREF) : this._type._client.get(fullHREF, query).then(function(links) {
+      result = (resourceLink != null) || (typeLink != null) ? (href = (ref1 = resourceLink != null ? resourceLink.href : void 0) != null ? ref1 : typeLink != null ? typeLink.href : void 0, type = (ref2 = resourceLink != null ? resourceLink.type : void 0) != null ? ref2 : typeLink != null ? typeLink.type : void 0, id = (ref3 = resourceLink != null ? resourceLink.id : void 0) != null ? ref3 : typeLink != null ? typeLink.id : void 0, id != null ? id : id = typeof resourceLink === 'string' ? resourceLink : void 0, ids = (ref4 = resourceLink != null ? resourceLink.ids : void 0) != null ? ref4 : typeLink != null ? typeLink.ids : void 0, ids != null ? ids : ids = Array.isArray(resourceLink) ? resourceLink : void 0, href != null ? (fullHREF = this._applyHREF(href), cachedByHREF = this._type._client.type(type)._resourcesCache[fullHREF], (cachedByHREF != null) && (query == null) ? Promise.resolve(cachedByHREF) : this._type._client.get(fullHREF, query).then(function(links) {
         if (id != null) {
           return links[0];
         } else {
@@ -756,10 +756,6 @@ Resource = (function(superClass) {
 
   Resource.prototype.uncacheLink = function(name) {
     return delete this._linksCache[name];
-  };
-
-  Resource.prototype.cacheLink = function(name, resource) {
-    return this._linksCache[name] = resource;
   };
 
   Resource.prototype._getHeadersForModification = function() {
