@@ -582,6 +582,9 @@ Resource = (function(superClass) {
     value = Resource.__super__.update.apply(this, arguments);
     if (this.id && this._type._resourcesCache[this.id] !== this) {
       this._type._resourcesCache[this.id] = this;
+      if (this.href != null) {
+        this._type._resourcesCache[this.href] = this;
+      }
       this._type.emit('change');
     }
     return value;
@@ -647,7 +650,8 @@ Resource = (function(superClass) {
   Resource.prototype.uncache = function() {
     if (this.id) {
       this.emit('uncache');
-      return delete this._type._resourcesCache[this.id];
+      delete this._type._resourcesCache[this.id];
+      return delete this._type._resourcesCache[this.href];
     } else {
       throw new Error('Can\'t uncache a resource with no ID');
     }
@@ -676,19 +680,19 @@ Resource = (function(superClass) {
   };
 
   Resource.prototype.get = function(name, query) {
-    var href, id, ids, ref, ref1, ref2, ref3, ref4, resourceLink, result, type, typeLink;
+    var cachedByHREF, fullHREF, href, id, ids, ref, ref1, ref2, ref3, ref4, resourceLink, result, type, typeLink;
     if ((this._linksCache[name] != null) && (query == null)) {
       return this._linksCache[name];
     } else {
       resourceLink = (ref = this.links) != null ? ref[name] : void 0;
       typeLink = this._type._links[name];
-      result = (resourceLink != null) || (typeLink != null) ? (href = (ref1 = resourceLink != null ? resourceLink.href : void 0) != null ? ref1 : typeLink != null ? typeLink.href : void 0, type = (ref2 = resourceLink != null ? resourceLink.type : void 0) != null ? ref2 : typeLink != null ? typeLink.type : void 0, id = (ref3 = resourceLink != null ? resourceLink.id : void 0) != null ? ref3 : typeLink != null ? typeLink.id : void 0, id != null ? id : id = typeof resourceLink === 'string' ? resourceLink : void 0, ids = (ref4 = resourceLink != null ? resourceLink.ids : void 0) != null ? ref4 : typeLink != null ? typeLink.ids : void 0, ids != null ? ids : ids = Array.isArray(resourceLink) ? resourceLink : void 0, href != null ? this._type._client.get(this._applyHREF(href), query).then(function(links) {
+      result = (resourceLink != null) || (typeLink != null) ? (href = (ref1 = resourceLink != null ? resourceLink.href : void 0) != null ? ref1 : typeLink != null ? typeLink.href : void 0, type = (ref2 = resourceLink != null ? resourceLink.type : void 0) != null ? ref2 : typeLink != null ? typeLink.type : void 0, id = (ref3 = resourceLink != null ? resourceLink.id : void 0) != null ? ref3 : typeLink != null ? typeLink.id : void 0, id != null ? id : id = typeof resourceLink === 'string' ? resourceLink : void 0, ids = (ref4 = resourceLink != null ? resourceLink.ids : void 0) != null ? ref4 : typeLink != null ? typeLink.ids : void 0, ids != null ? ids : ids = Array.isArray(resourceLink) ? resourceLink : void 0, type === 'users' ? href = null : void 0, href != null ? (fullHREF = this._applyHREF(href), cachedByHREF = this._type._client.type(type)._resourcesCache[fullHREF], (cachedByHREF != null) && (query == null) ? Promise.resolve(cachedByHREF) : this._type._client.get(fullHREF, query).then(function(links) {
         if (id != null) {
           return links[0];
         } else {
           return links;
         }
-      }) : type != null ? this._type._client.type(type).get(id != null ? id : ids, query).then(function(links) {
+      })) : type != null ? this._type._client.type(type).get(id != null ? id : ids, query).then(function(links) {
         if (id != null) {
           return links[0];
         } else {
@@ -752,6 +756,10 @@ Resource = (function(superClass) {
 
   Resource.prototype.uncacheLink = function(name) {
     return delete this._linksCache[name];
+  };
+
+  Resource.prototype.cacheLink = function(name, resource) {
+    return this._linksCache[name] = resource;
   };
 
   Resource.prototype._getHeadersForModification = function() {
@@ -969,7 +977,7 @@ module.exports = Type = (function(superClass) {
       results = [];
       for (i = 0, len = ids.length; i < len; i++) {
         id = ids[i];
-        if (id in this._resourcesCache && otherArgs.length === 0) {
+        if (id in this._resourcesCache && (otherArgs.length === 0 || (otherArgs[0] == null))) {
           results.push(Promise.resolve(this._resourcesCache[id]));
         } else {
           results.push((ref = this._client).get.apply(ref, [this._getURL(id)].concat(slice.call(otherArgs))).then(function(arg) {
