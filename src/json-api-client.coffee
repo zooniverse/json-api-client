@@ -11,19 +11,43 @@ DEFAULT_TYPE_AND_ACCEPT =
 
 RESERVED_TOP_LEVEL_KEYS = ['meta', 'links', 'linked', 'data']
 
-class JSONAPIClient
+READ_OPS = ['HEAD', 'GET']
+WRITE_OPS = ['POST', 'PUT', 'DELETE']
+
+class JSONAPIClient extends Model
   root: '/'
   headers: null
+  reads: 0
+  writes: 0
 
   _typesCache: null # Types that have been defined
 
   constructor: (@root, @headers = {}) ->
+    super()
     @_typesCache = {}
 
   request: (method, url, payload, headers) ->
+    method = method.toUpperCase()
     fullURL = @root + url
     allHeaders = mergeInto {}, DEFAULT_TYPE_AND_ACCEPT, @headers, headers
-    makeHTTPRequest method, fullURL, payload, allHeaders
+
+    if method in READ_OPS
+      @update reads: @reads + 1
+    else if method in WRITE_OPS
+      @update writes: @writes + 1
+
+    request = makeHTTPRequest method, fullURL, payload, allHeaders
+
+    request
+      .catch =>
+        null
+      .then =>
+        if method in READ_OPS
+          @update reads: @reads - 1
+        else if method in WRITE_OPS
+          @update writes: @writes - 1
+
+    request
       .then @processResponse.bind this
       .catch @handleError.bind this
 
