@@ -14,19 +14,16 @@ RESERVED_TOP_LEVEL_KEYS = ['meta', 'links', 'linked', 'data']
 READ_OPS = ['HEAD', 'GET']
 WRITE_OPS = ['POST', 'PUT', 'DELETE']
 
-class JSONAPIClient
+class JSONAPIClient extends Model
   root: '/'
   headers: null
-
-  status: null # Track reads and writes
+  reads: 0
+  writes: 0
 
   _typesCache: null # Types that have been defined
 
   constructor: (@root, @headers = {}) ->
-    @status = new Model
-      reads: 0
-      writes: 0
-
+    super()
     @_typesCache = {}
 
   request: (method, url, payload, headers) ->
@@ -34,11 +31,10 @@ class JSONAPIClient
     fullURL = @root + url
     allHeaders = mergeInto {}, DEFAULT_TYPE_AND_ACCEPT, @headers, headers
 
-    args = arguments
     if method in READ_OPS
-      @status.update reads: @status.reads + 1
+      @update reads: @reads + 1
     else if method in WRITE_OPS
-      @status.update writes: @status.writes + 1
+      @update writes: @writes + 1
 
     request = makeHTTPRequest method, fullURL, payload, allHeaders
 
@@ -47,9 +43,9 @@ class JSONAPIClient
         null
       .then =>
         if method in READ_OPS
-          @status.update reads: @status.reads - 1
+          @update reads: @reads - 1
         else if method in WRITE_OPS
-          @status.update writes: @status.writes - 1
+          @update writes: @writes - 1
 
     request
       .then @processResponse.bind this
