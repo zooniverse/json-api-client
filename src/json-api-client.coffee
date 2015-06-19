@@ -23,7 +23,7 @@ class JSONAPIClient extends Model
   _typesCache: null # Types that have been defined
 
   constructor: (@root, @headers = {}) ->
-    super()
+    super null
     @_typesCache = {}
 
   request: (method, url, payload, headers) ->

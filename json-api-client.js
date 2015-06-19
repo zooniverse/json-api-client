@@ -170,7 +170,7 @@ JSONAPIClient = (function(superClass) {
   function JSONAPIClient(root, headers1) {
     this.root = root;
     this.headers = headers1 != null ? headers1 : {};
-    JSONAPIClient.__super__.constructor.call(this);
+    JSONAPIClient.__super__.constructor.call(this, null);
     this._typesCache = {};
   }
 
