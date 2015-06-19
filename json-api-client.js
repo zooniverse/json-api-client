@@ -123,9 +123,11 @@ module.exports = Emitter = (function() {
 
 
 },{}],2:[function(_dereq_,module,exports){
-var DEFAULT_TYPE_AND_ACCEPT, Emitter, JSONAPIClient, Model, RESERVED_TOP_LEVEL_KEYS, Resource, Type, makeHTTPRequest, mergeInto,
-  slice = [].slice,
-  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+var DEFAULT_TYPE_AND_ACCEPT, Emitter, JSONAPIClient, Model, READ_OPS, RESERVED_TOP_LEVEL_KEYS, Resource, Type, WRITE_OPS, makeHTTPRequest, mergeInto,
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty,
+  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  slice = [].slice;
 
 makeHTTPRequest = _dereq_('./make-http-request');
 
@@ -146,26 +148,65 @@ DEFAULT_TYPE_AND_ACCEPT = {
 
 RESERVED_TOP_LEVEL_KEYS = ['meta', 'links', 'linked', 'data'];
 
-JSONAPIClient = (function() {
+READ_OPS = ['HEAD', 'GET'];
+
+WRITE_OPS = ['POST', 'PUT', 'DELETE'];
+
+JSONAPIClient = (function(superClass) {
   var fn, i, len, method, ref;
+
+  extend(JSONAPIClient, superClass);
 
   JSONAPIClient.prototype.root = '/';
 
   JSONAPIClient.prototype.headers = null;
+
+  JSONAPIClient.prototype.reads = 0;
+
+  JSONAPIClient.prototype.writes = 0;
 
   JSONAPIClient.prototype._typesCache = null;
 
   function JSONAPIClient(root, headers1) {
     this.root = root;
     this.headers = headers1 != null ? headers1 : {};
+    JSONAPIClient.__super__.constructor.call(this, null);
     this._typesCache = {};
   }
 
   JSONAPIClient.prototype.request = function(method, url, payload, headers) {
-    var allHeaders, fullURL;
+    var allHeaders, fullURL, request;
+    method = method.toUpperCase();
     fullURL = this.root + url;
     allHeaders = mergeInto({}, DEFAULT_TYPE_AND_ACCEPT, this.headers, headers);
-    return makeHTTPRequest(method, fullURL, payload, allHeaders).then(this.processResponse.bind(this))["catch"](this.handleError.bind(this));
+    if (indexOf.call(READ_OPS, method) >= 0) {
+      this.update({
+        reads: this.reads + 1
+      });
+    } else if (indexOf.call(WRITE_OPS, method) >= 0) {
+      this.update({
+        writes: this.writes + 1
+      });
+    }
+    request = makeHTTPRequest(method, fullURL, payload, allHeaders);
+    request["catch"]((function(_this) {
+      return function() {
+        return null;
+      };
+    })(this)).then((function(_this) {
+      return function() {
+        if (indexOf.call(READ_OPS, method) >= 0) {
+          return _this.update({
+            reads: _this.reads - 1
+          });
+        } else if (indexOf.call(WRITE_OPS, method) >= 0) {
+          return _this.update({
+            writes: _this.writes - 1
+          });
+        }
+      };
+    })(this));
+    return request.then(this.processResponse.bind(this))["catch"](this.handleError.bind(this));
   };
 
   ref = ['get', 'post', 'put', 'delete'];
@@ -291,7 +332,7 @@ JSONAPIClient = (function() {
 
   return JSONAPIClient;
 
-})();
+})(Model);
 
 module.exports = JSONAPIClient;
 
