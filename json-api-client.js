@@ -575,7 +575,7 @@ module.exports = Model = (function(superClass) {
 
 
 },{"./emitter":1,"./merge-into":4}],6:[function(_dereq_,module,exports){
-var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise,
+var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise, sleep,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
   slice = [].slice,
@@ -584,6 +584,16 @@ var Model, PLACEHOLDERS_PATTERN, Resource, ResourcePromise,
 Model = _dereq_('./model');
 
 PLACEHOLDERS_PATTERN = /{(.+?)}/g;
+
+sleep = (function(_this) {
+  return function(howLong) {
+    return function(value) {
+      return new Promise(function(resolve) {
+        return setTimeout(resolve.bind(null, value), howLong);
+      });
+    };
+  };
+})(this);
 
 Resource = (function(superClass) {
   extend(Resource, superClass);
@@ -639,10 +649,11 @@ Resource = (function(superClass) {
       return function() {
         return null;
       };
-    })(this)).then((function(_this) {
+    })(this)).then(sleep(500)).then((function(_this) {
       return function() {
         var save;
         save = _this.id ? _this.refresh(true).then(function() {
+          _this._changedKeys.splice(0);
           return _this._type._client.put(_this._getURL(), payload, _this._getHeadersForModification());
         }) : _this._type._client.post(_this._type._getURL(), payload);
         return new ResourcePromise(save.then(function(arg) {
@@ -650,7 +661,6 @@ Resource = (function(superClass) {
           result = arg[0];
           if (result !== _this) {
             _this.update(result);
-            _this._changedKeys.splice(0);
             result.destroy();
           }
           _this.emit('save');
@@ -672,9 +682,9 @@ Resource = (function(superClass) {
     return changes;
   };
 
-  Resource.prototype.refresh = function(saveChanges) {
+  Resource.prototype.refresh = function(dontOverrideChanges) {
     var changes;
-    if (saveChanges) {
+    if (dontOverrideChanges) {
       changes = this.getChangesSinceSave();
       return this.refresh().then((function(_this) {
         return function() {
@@ -932,6 +942,7 @@ module.exports.Promise = ResourcePromise;
 var Emitter, Resource, Type, mergeInto,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
+  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   slice = [].slice;
 
 Emitter = _dereq_('./emitter');
@@ -965,7 +976,7 @@ module.exports = Type = (function(superClass) {
   }
 
   Type.prototype.create = function(data, headers, meta) {
-    var moreRecentChanges, ref, ref1, resource;
+    var key, ref, ref1, resource, value;
     if (data == null) {
       data = {};
     }
@@ -981,13 +992,16 @@ module.exports = Type = (function(superClass) {
       resource = (ref1 = this._resourcesCache[data.id]) != null ? ref1 : new this.Resource(this);
       mergeInto(resource._headers, headers);
       mergeInto(resource._meta, meta);
-      moreRecentChanges = resource.getChangesSinceSave();
-      resource.update(data);
-      resource.update(moreRecentChanges);
-      if (resource === this._resourcesCache[data.id]) {
-        resource._changedKeys.splice(0);
-        resource.emit('change');
+      for (key in data) {
+        value = data[key];
+        if (indexOf.call(resource._changedKeys, key) < 0) {
+          resource[key] = value;
+        }
       }
+      if (resource.id != null) {
+        this._resourcesCache[data.id] = resource;
+      }
+      resource.emit('change');
       return resource;
     }
   };

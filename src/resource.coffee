@@ -3,6 +3,11 @@ Model = require './model'
 # Turn a JSON-API "href" template into a usable URL.
 PLACEHOLDERS_PATTERN = /{(.+?)}/g
 
+sleep = (howLong) =>
+  (value) =>
+    new Promise (resolve) ->
+      setTimeout resolve.bind(null, value), howLong
+
 class Resource extends Model
   _type: null
   _headers: null
@@ -38,9 +43,11 @@ class Resource extends Model
     @_write = @_write
       .catch =>
         null
+      .then sleep 500
       .then =>
         save = if @id
           @refresh(true).then =>
+            @_changedKeys.splice 0
             @_type._client.put @_getURL(), payload, @_getHeadersForModification()
         else
           @_type._client.post @_type._getURL(), payload
@@ -48,7 +55,6 @@ class Resource extends Model
         new ResourcePromise save.then ([result]) =>
           unless result is this
             @update result
-            @_changedKeys.splice 0
             result.destroy()
           @emit 'save'
           this
@@ -60,8 +66,8 @@ class Resource extends Model
       changes[key] = @[key]
     changes
 
-  refresh: (saveChanges) ->
-    if saveChanges
+  refresh: (dontOverrideChanges) ->
+    if dontOverrideChanges
       changes = @getChangesSinceSave()
       @refresh().then =>
         @update changes
