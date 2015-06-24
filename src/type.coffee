@@ -24,14 +24,17 @@ module.exports = class Type extends Emitter
       @_client.type(data.type).create arguments...
     else
       resource = @_resourcesCache[data.id] ? new @Resource this
+
       mergeInto resource._headers, headers
       mergeInto resource._meta, meta
-      moreRecentChanges = resource.getChangesSinceSave()
-      resource.update data
-      resource.update moreRecentChanges
-      if resource is @_resourcesCache[data.id]
-        resource._changedKeys.splice 0
-        resource.emit 'change'
+
+      for key, value of data when key not in resource._changedKeys
+        resource[key] = value
+
+      if resource.id?
+        @_resourcesCache[data.id] = resource
+
+      resource.emit 'change'
       resource
 
   get: ->
