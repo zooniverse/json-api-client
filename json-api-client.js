@@ -362,7 +362,7 @@ Object.defineProperty(module.exports, 'util', {
 },{"./emitter":1,"./make-http-request":3,"./merge-into":4,"./model":5,"./resource":6,"./type":7}],3:[function(_dereq_,module,exports){
 var CACHE_FOR, cachedGets;
 
-CACHE_FOR = 1000;
+CACHE_FOR = 0;
 
 cachedGets = {};
 
@@ -406,19 +406,14 @@ module.exports = function(method, url, data, headers, modify) {
         var ref;
         if (request.readyState === request.DONE) {
           if ((200 <= (ref = request.status) && ref < 300)) {
-            if (method === 'GET') {
-              setTimeout((function() {
-                return delete cachedGets[url];
-              }), CACHE_FOR);
-            }
-            return resolve(request);
+            resolve(request);
           } else {
-            if (method === 'GET') {
-              setTimeout((function() {
-                return delete cachedGets[url];
-              }), CACHE_FOR);
-            }
-            return reject(request);
+            reject(request);
+          }
+          if (method === 'GET') {
+            return setTimeout((function() {
+              return delete cachedGets[url];
+            }), CACHE_FOR);
           }
         }
       };
@@ -596,6 +591,8 @@ Resource = (function(superClass) {
 
   Resource.prototype._linksCache = null;
 
+  Resource.prototype._savingKeys = null;
+
   Resource.prototype._write = Promise.resolve();
 
   function Resource(_type) {
@@ -606,6 +603,7 @@ Resource = (function(superClass) {
     this._headers = {};
     this._meta = {};
     this._linksCache = {};
+    this._savingKeys = {};
     Resource.__super__.constructor.call(this, null);
     this._type.emit('change');
     this.emit('create');
@@ -632,9 +630,17 @@ Resource = (function(superClass) {
   };
 
   Resource.prototype.save = function() {
-    var payload;
+    var base, changes, key, payload;
     payload = {};
-    payload[this._type._name] = this.toJSON.call(this.getChangesSinceSave());
+    changes = this.toJSON.call(this.getChangesSinceSave());
+    payload[this._type._name] = changes;
+    this._changedKeys.splice(0);
+    for (key in changes) {
+      if ((base = this._savingKeys)[key] == null) {
+        base[key] = 0;
+      }
+      this._savingKeys[key] += 1;
+    }
     this._write = this._write["catch"]((function(_this) {
       return function() {
         return null;
@@ -648,9 +654,14 @@ Resource = (function(superClass) {
         return new ResourcePromise(save.then(function(arg) {
           var result;
           result = arg[0];
+          for (key in changes) {
+            _this._savingKeys[key] -= 1;
+            if (_this._savingKeys[key] === 0) {
+              delete _this._savingKeys[key];
+            }
+          }
           if (result !== _this) {
             _this.update(result);
-            _this._changedKeys.splice(0);
             result.destroy();
           }
           _this.emit('save');
@@ -932,6 +943,7 @@ module.exports.Promise = ResourcePromise;
 var Emitter, Resource, Type, mergeInto,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
+  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   slice = [].slice;
 
 Emitter = _dereq_('./emitter');
@@ -965,7 +977,7 @@ module.exports = Type = (function(superClass) {
   }
 
   Type.prototype.create = function(data, headers, meta) {
-    var moreRecentChanges, ref, ref1, resource;
+    var key, ref, ref1, resource, value;
     if (data == null) {
       data = {};
     }
@@ -981,12 +993,17 @@ module.exports = Type = (function(superClass) {
       resource = (ref1 = this._resourcesCache[data.id]) != null ? ref1 : new this.Resource(this);
       mergeInto(resource._headers, headers);
       mergeInto(resource._meta, meta);
-      moreRecentChanges = resource.getChangesSinceSave();
-      resource.update(data);
-      resource.update(moreRecentChanges);
-      if (resource === this._resourcesCache[data.id]) {
-        resource._changedKeys.splice(0);
+      if (data.id != null) {
+        for (key in data) {
+          value = data[key];
+          if ((indexOf.call(resource._changedKeys, key) < 0) && (!(key in resource._savingKeys))) {
+            resource[key] = value;
+          }
+        }
+        this._resourcesCache[resource.id] = resource;
         resource.emit('change');
+      } else {
+        resource.update(data);
       }
       return resource;
     }
