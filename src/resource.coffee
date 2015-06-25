@@ -8,6 +8,7 @@ class Resource extends Model
   _headers: null
   _meta: null
   _linksCache: null
+  _savingKeys: null
   _write: Promise.resolve()
 
   constructor: (@_type) ->
@@ -16,6 +17,7 @@ class Resource extends Model
     @_headers = {}
     @_meta = {}
     @_linksCache = {}
+    @_savingKeys = {}
     super null
     @_type.emit 'change'
     @emit 'create'
@@ -33,7 +35,14 @@ class Resource extends Model
 
   save: ->
     payload = {}
-    payload[@_type._name] = @toJSON.call @getChangesSinceSave()
+    changes = @toJSON.call @getChangesSinceSave()
+    payload[@_type._name] = changes
+
+    @_changedKeys.splice 0
+
+    for key of changes
+      @_savingKeys[key] ?= 0
+      @_savingKeys[key] += 1
 
     @_write = @_write
       .catch =>
@@ -46,9 +55,13 @@ class Resource extends Model
           @_type._client.post @_type._getURL(), payload
 
         new ResourcePromise save.then ([result]) =>
+          for key of changes
+            @_savingKeys[key] -= 1
+            if @_savingKeys[key] is 0
+              delete @_savingKeys[key]
+
           unless result is this
             @update result
-            @_changedKeys.splice 0
             result.destroy()
           @emit 'save'
           this
