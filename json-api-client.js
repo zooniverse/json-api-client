@@ -362,7 +362,7 @@ Object.defineProperty(module.exports, 'util', {
 },{"./emitter":1,"./make-http-request":3,"./merge-into":4,"./model":5,"./resource":6,"./type":7}],3:[function(_dereq_,module,exports){
 var CACHE_FOR, cachedGets;
 
-CACHE_FOR = 1000;
+CACHE_FOR = 0;
 
 cachedGets = {};
 
@@ -406,19 +406,14 @@ module.exports = function(method, url, data, headers, modify) {
         var ref;
         if (request.readyState === request.DONE) {
           if ((200 <= (ref = request.status) && ref < 300)) {
-            if (method === 'GET') {
-              setTimeout((function() {
-                return delete cachedGets[url];
-              }), CACHE_FOR);
-            }
-            return resolve(request);
+            resolve(request);
           } else {
-            if (method === 'GET') {
-              setTimeout((function() {
-                return delete cachedGets[url];
-              }), CACHE_FOR);
-            }
-            return reject(request);
+            reject(request);
+          }
+          if (method === 'GET') {
+            return setTimeout((function() {
+              return delete cachedGets[url];
+            }), CACHE_FOR);
           }
         }
       };
