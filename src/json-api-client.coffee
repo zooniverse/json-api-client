@@ -17,18 +17,21 @@ WRITE_OPS = ['POST', 'PUT', 'DELETE']
 class JSONAPIClient extends Model
   root: '/'
   headers: null
+  params: null
   reads: 0
   writes: 0
 
   _typesCache: null # Types that have been defined
 
   constructor: (@root, @headers = {}) ->
+    @params = {}
     super null
     @_typesCache = {}
 
   request: (method, url, payload, headers) ->
     method = method.toUpperCase()
     fullURL = @root + url
+    fullPayload = mergeInto {}, @params, payload
     allHeaders = mergeInto {}, DEFAULT_TYPE_AND_ACCEPT, @headers, headers
 
     if method in READ_OPS
@@ -36,7 +39,7 @@ class JSONAPIClient extends Model
     else if method in WRITE_OPS
       @update writes: @writes + 1
 
-    request = makeHTTPRequest method, fullURL, payload, allHeaders
+    request = makeHTTPRequest method, fullURL, fullPayload, allHeaders
 
     request
       .catch =>
