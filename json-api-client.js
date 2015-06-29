@@ -161,6 +161,8 @@ JSONAPIClient = (function(superClass) {
 
   JSONAPIClient.prototype.headers = null;
 
+  JSONAPIClient.prototype.params = null;
+
   JSONAPIClient.prototype.reads = 0;
 
   JSONAPIClient.prototype.writes = 0;
@@ -170,14 +172,16 @@ JSONAPIClient = (function(superClass) {
   function JSONAPIClient(root, headers1) {
     this.root = root;
     this.headers = headers1 != null ? headers1 : {};
+    this.params = {};
     JSONAPIClient.__super__.constructor.call(this, null);
     this._typesCache = {};
   }
 
   JSONAPIClient.prototype.request = function(method, url, payload, headers) {
-    var allHeaders, fullURL, request;
+    var allHeaders, fullPayload, fullURL, request;
     method = method.toUpperCase();
     fullURL = this.root + url;
+    fullPayload = mergeInto({}, this.params, payload);
     allHeaders = mergeInto({}, DEFAULT_TYPE_AND_ACCEPT, this.headers, headers);
     if (indexOf.call(READ_OPS, method) >= 0) {
       this.update({
@@ -188,7 +192,7 @@ JSONAPIClient = (function(superClass) {
         writes: this.writes + 1
       });
     }
-    request = makeHTTPRequest(method, fullURL, payload, allHeaders);
+    request = makeHTTPRequest(method, fullURL, fullPayload, allHeaders);
     request["catch"]((function(_this) {
       return function() {
         return null;
