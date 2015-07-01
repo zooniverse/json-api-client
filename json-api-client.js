@@ -364,12 +364,13 @@ Object.defineProperty(module.exports, 'util', {
 
 
 },{"./emitter":1,"./make-http-request":3,"./merge-into":4,"./model":5,"./resource":6,"./type":7}],3:[function(_dereq_,module,exports){
-var cachedGets;
+var cachedGets, makeHTTPRequest;
 
 cachedGets = {};
 
-module.exports = function(method, url, data, headers, modify) {
-  var key, promise, value;
+makeHTTPRequest = function(method, url, data, headers, modify) {
+  var key, originalArguments, promise, value;
+  originalArguments = Array.prototype.slice.call(arguments);
   method = method.toUpperCase();
   if (method === 'GET') {
     if ((data != null) && Object.keys(data).length !== 0) {
@@ -412,6 +413,8 @@ module.exports = function(method, url, data, headers, modify) {
           }
           if ((200 <= (ref = request.status) && ref < 300)) {
             return resolve(request);
+          } else if (request.status === 408) {
+            return makeHTTPRequest.apply(null, originalArguments).then(resolve)["catch"](reject);
           } else {
             return reject(request);
           }
@@ -428,6 +431,8 @@ module.exports = function(method, url, data, headers, modify) {
   }
   return promise;
 };
+
+module.exports = makeHTTPRequest;
 
 
 

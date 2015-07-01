@@ -1,6 +1,8 @@
 cachedGets = {}
 
-module.exports = (method, url, data, headers, modify) ->
+makeHTTPRequest = (method, url, data, headers, modify) ->
+  originalArguments = Array::slice.call arguments # In case we need to retry
+
   method = method.toUpperCase()
 
   if method is 'GET'
@@ -36,6 +38,10 @@ module.exports = (method, url, data, headers, modify) ->
 
         if 200 <= request.status < 300
           resolve request
+        else if request.status is 408 # Try again
+          makeHTTPRequest.apply null, originalArguments
+            .then resolve
+            .catch reject
         else
           reject request
 
@@ -48,3 +54,5 @@ module.exports = (method, url, data, headers, modify) ->
     cachedGets[url] = promise
 
   promise
+
+module.exports = makeHTTPRequest
