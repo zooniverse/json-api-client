@@ -1,9 +1,8 @@
-# This should be just long enough that near-simultaneous GETs don't make multiple requests.
-CACHE_FOR = 0
-
 cachedGets = {}
 
-module.exports = (method, url, data, headers, modify) ->
+makeHTTPRequest = (method, url, data, headers, modify) ->
+  originalArguments = Array::slice.call arguments # In case we need to retry
+
   method = method.toUpperCase()
 
   if method is 'GET'
@@ -34,12 +33,17 @@ module.exports = (method, url, data, headers, modify) ->
 
     request.onreadystatechange = (e) ->
       if request.readyState is request.DONE
+        if method is 'GET'
+          delete cachedGets[url]
+
         if 200 <= request.status < 300
           resolve request
+        else if request.status is 408 # Try again
+          makeHTTPRequest.apply null, originalArguments
+            .then resolve
+            .catch reject
         else
           reject request
-        if method is 'GET'
-          setTimeout (-> delete cachedGets[url]), CACHE_FOR
 
     if data? and headers?['Content-Type']?.indexOf('json') isnt -1
       data = JSON.stringify data
@@ -50,3 +54,5 @@ module.exports = (method, url, data, headers, modify) ->
     cachedGets[url] = promise
 
   promise
+
+module.exports = makeHTTPRequest
