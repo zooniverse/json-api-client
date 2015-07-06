@@ -146,7 +146,7 @@ DEFAULT_TYPE_AND_ACCEPT = {
   'Accept': 'application/vnd.api+json'
 };
 
-RESERVED_TOP_LEVEL_KEYS = ['meta', 'links', 'linked', 'data'];
+RESERVED_TOP_LEVEL_KEYS = ['meta', 'links', 'data'];
 
 READ_OPS = ['HEAD', 'GET'];
 
@@ -225,7 +225,7 @@ JSONAPIClient = (function(superClass) {
   }
 
   JSONAPIClient.prototype.processResponse = function(request) {
-    var headers, j, k, l, len1, len2, len3, linkedResources, ref1, ref2, ref3, ref4, resourceData, resources, response, results, typeName;
+    var headers, j, k, len1, len2, ref1, ref2, resourceData, resources, response, results, typeName;
     response = (function() {
       try {
         return JSON.parse(request.responseText);
@@ -237,31 +237,20 @@ JSONAPIClient = (function(superClass) {
     if ('links' in response) {
       this._handleLinks(response.links);
     }
-    if ('linked' in response) {
-      ref1 = response.linked;
-      for (typeName in ref1) {
-        linkedResources = ref1[typeName];
-        ref2 = [].concat(linkedResources);
-        for (j = 0, len1 = ref2.length; j < len1; j++) {
-          resourceData = ref2[j];
-          this.type(typeName).create(resourceData, headers, response.meta);
-        }
-      }
-    }
     results = [];
     if ('data' in response) {
-      ref3 = [].concat(response.data);
-      for (k = 0, len2 = ref3.length; k < len2; k++) {
-        resourceData = ref3[k];
+      ref1 = [].concat(response.data);
+      for (j = 0, len1 = ref1.length; j < len1; j++) {
+        resourceData = ref1[j];
         results.push(this.type(resourceData.type).create(resourceData, headers, response.meta));
       }
     } else {
       for (typeName in response) {
         resources = response[typeName];
         if (indexOf.call(RESERVED_TOP_LEVEL_KEYS, typeName) < 0) {
-          ref4 = [].concat(resources);
-          for (l = 0, len3 = ref4.length; l < len3; l++) {
-            resourceData = ref4[l];
+          ref2 = [].concat(resources);
+          for (k = 0, len2 = ref2.length; k < len2; k++) {
+            resourceData = ref2[k];
             results.push(this.type(typeName).create(resourceData, headers, response.meta));
           }
         }
