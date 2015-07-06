@@ -2,7 +2,7 @@ Emitter = require './emitter'
 mergeInto = require './merge-into'
 
 isIndex = (string) ->
-  integer = Math.abs parseInt string, 10
+  integer = parseInt string, 10
   integer.toString(10) is string and not isNaN integer
 
 removeUnderscoredKeys = (target) ->
@@ -35,7 +35,7 @@ module.exports = class Model extends Emitter
         rootKey = path[0]
         base = this
         until path.length is 1
-          base[path[0]] ?= if isIndex path[0]
+          base[path[0]] ?= if isIndex path[1]
             []
           else
             {}

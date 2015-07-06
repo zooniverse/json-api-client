@@ -470,7 +470,7 @@ mergeInto = _dereq_('./merge-into');
 
 isIndex = function(string) {
   var integer;
-  integer = Math.abs(parseInt(string, 10));
+  integer = parseInt(string, 10);
   return integer.toString(10) === string && !isNaN(integer);
 };
 
@@ -532,7 +532,7 @@ module.exports = Model = (function(superClass) {
         base = this;
         while (path.length !== 1) {
           if (base[name = path[0]] == null) {
-            base[name] = isIndex(path[0]) ? [] : {};
+            base[name] = isIndex(path[1]) ? [] : {};
           }
           base = base[path.shift()];
         }
