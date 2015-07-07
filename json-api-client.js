@@ -758,7 +758,9 @@ Resource = (function(superClass) {
       }) : void 0) : name in this ? Promise.resolve(this[name]) : this._type._client.get(this._getURL(name));
       result.then((function(_this) {
         return function() {
-          return _this._linksCache[name] = result;
+          if (query == null) {
+            return _this._linksCache[name] = result;
+          }
         };
       })(this));
       return new ResourcePromise(result);
