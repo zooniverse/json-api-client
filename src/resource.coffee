@@ -156,7 +156,7 @@ class Resource extends Model
         @_type._client.get @_getURL name
 
       result.then =>
-        @_linksCache[name] = result
+        @_linksCache[name] = result unless query?
 
       new ResourcePromise result
 
