@@ -9,7 +9,7 @@ DEFAULT_TYPE_AND_ACCEPT =
   'Content-Type': 'application/vnd.api+json'
   'Accept': 'application/vnd.api+json'
 
-RESERVED_TOP_LEVEL_KEYS = ['meta', 'links', 'linked', 'data']
+RESERVED_TOP_LEVEL_KEYS = ['meta', 'links', 'data']
 
 READ_OPS = ['HEAD', 'GET']
 WRITE_OPS = ['POST', 'PUT', 'DELETE']
@@ -64,11 +64,6 @@ class JSONAPIClient extends Model
 
     if 'links' of response
       @_handleLinks response.links
-
-    if 'linked' of response
-      for typeName, linkedResources of response.linked
-        for resourceData in [].concat linkedResources
-          @type(typeName).create resourceData, headers, response.meta
 
     results = []
     if 'data' of response
