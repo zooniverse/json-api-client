@@ -1,15 +1,19 @@
 {
   "name": "json-api-client",
   "version": "0.4.4",
-  "main": "./json-api-client",
-  "devDependencies": {
-    "browserify": "^5.12.1",
-    "coffeeify": "^0.7.0",
-    "derequire": "^1.2.0",
-    "onchange": "0.0.2"
+  "main": "./index.coffee",
+  "peerDependencies": {
+    "browserify": "~11.0.1",
+    "coffeeify": "^1.1.0",
+    "superagent": "^1.3.0"
   },
   "scripts": {
     "start": "npm run build; onchange ./src/* -- npm run build",
     "build": "browserify --entry ./src/json-api-client.coffee --extension .coffee --transform coffeeify --standalone JSONAPIClient | derequire > ./json-api-client.js"
+  },
+  "browserify": {
+      "transform": [
+          "coffeeify"
+      ]
   }
 }

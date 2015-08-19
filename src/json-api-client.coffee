@@ -58,9 +58,9 @@ class JSONAPIClient extends Model
     @::[method] = ->
       @request method, arguments...
 
-  processResponse: (request) ->
-    response = try JSON.parse request.responseText catch then {}
-    headers = @_getHeadersFor request
+  processResponse: (res) ->
+    response = try JSON.parse res.text catch then {}
+    {headers} = res
 
     if 'links' of response
       @_handleLinks response.links
@@ -79,13 +79,6 @@ class JSONAPIClient extends Model
         for resourceData in [].concat resources
           results.push @type(typeName).create resourceData, headers, response.meta
     results
-
-  _getHeadersFor: (request) ->
-    headers = {}
-    for pair in request.getAllResponseHeaders().split '\n' when pair isnt ''
-      [key, value...] = pair.split ':'
-      headers[key.trim()] = value.join(':').trim()
-    headers
 
   _handleLinks: (links) ->
     for typeAndAttribute, link of links
