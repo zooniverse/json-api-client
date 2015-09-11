@@ -1,11 +1,19 @@
 request = require 'superagent'
 
-cachedGets = {}
+unless window?
+  request = request.agent()
 
-makeHTTPRequest = (method, url, data, headers, modify) ->
+coreUrl = require 'url'
+corePath = require 'path'
+
+makeHTTPRequest = (method, url, data, headers = {}, modify) ->
   originalArguments = Array::slice.call arguments # In case we need to retry
 
   method = method.toLowerCase()
+
+  urlObject = coreUrl.parse url
+  urlObject.pathname = corePath.normalize urlObject.pathname
+  url = coreUrl.format urlObject
 
   promise = new Promise (resolve, reject) ->
     req = switch method
@@ -15,8 +23,10 @@ makeHTTPRequest = (method, url, data, headers, modify) ->
             when 'post' then request.post(url).send(data)
             when 'delete' then request.del(url)
 
-    req = req.withCredentials()
-      .set(headers || {})
+    req = req.set headers
+
+    if window?
+      req = req.withCredentials()
 
     req = modify request if modify?
 
