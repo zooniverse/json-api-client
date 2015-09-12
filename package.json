@@ -3,14 +3,17 @@
   "version": "0.4.4",
   "main": "./lib/json-api-client",
   "scripts": {
-    "start": "npm run build; onchange ./src/* -- npm run build",
-    "build": "browserify --entry ./src/json-api-client.coffee --extension .coffee --transform coffeeify --standalone JSONAPIClient | derequire > ./json-api-client.js",
-    "publish": "coffee --compile --output lib src"
+    "start": "npm run compile; onchange ./src/* -- npm run compile",
+    "build-browser-standalone": "npm run compile && browserify --entry ./lib/json-api-client.js --standalone JSONAPIClient | derequire > ./json-api-client.js",
+    "compile": "coffee --compile --output ./lib ./src",
+    "prepublish": "npm run compile"
   },
   "peerDependencies": {
     "superagent": "^1.3.0"
   },
   "devDependencies": {
-    "coffee-script": "^1.10.0"
+    "browserify": "^11.1.0",
+    "coffee-script": "^1.10.0",
+    "onchange": "^2.0.0"
   }
 }
