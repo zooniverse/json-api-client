@@ -1,10 +1,10 @@
 request = require 'superagent'
-
-unless window?
-  request = request.agent()
-
 coreUrl = require 'url'
 corePath = require 'path'
+env = require './detect-environment'
+
+if env is 'node'
+  request = request.agent()
 
 makeHTTPRequest = (method, url, data, headers = {}, modify) ->
   originalArguments = Array::slice.call arguments # In case we need to retry
@@ -24,9 +24,7 @@ makeHTTPRequest = (method, url, data, headers = {}, modify) ->
             when 'delete' then request.del(url)
 
     req = req.set headers
-
-    if window?
-      req = req.withCredentials()
+    req = req.withCredentials() if req.withCredentials?
 
     req = modify request if modify?
 
