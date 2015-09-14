@@ -24,9 +24,7 @@ makeHTTPRequest = (method, url, data, headers = {}, modify) ->
             when 'delete' then request.del(url)
 
     req = req.set headers
-
-    if env is 'browser'
-      req = req.withCredentials()
+    req = req.withCredentials() if req.withCredentials?
 
     req = modify request if modify?
 
