@@ -1,6 +1,6 @@
 {
   "name": "json-api-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "./lib/json-api-client",
   "scripts": {
     "start": "npm run compile; onchange ./src/* -- npm run compile",
