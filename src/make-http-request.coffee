@@ -2,7 +2,13 @@ request = require 'superagent'
 coreUrl = require 'url'
 corePath = require 'path'
 
+DEFAULT_HEADERS = require './default-headers'
+
 request = request.agent() if request.agent?
+
+# Superagent will only auto-parse responses from a Content-Type header it recognizes
+# Add the Accept in use by the JSON API spec, which is what will be sent back from the server
+request.parse[DEFAULT_HEADERS['Accept']] = JSON.parse
 
 makeHTTPRequest = (method, url, data, headers = {}, modify) ->
   originalArguments = Array::slice.call arguments # In case we need to retry
