@@ -31,7 +31,7 @@ makeHTTPRequest = (method, url, data, headers = {}, modify) ->
           .then resolve
           .catch reject
       else if err?
-        reject response
+        reject err
       else
         resolve response
 
