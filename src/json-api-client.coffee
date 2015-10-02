@@ -5,9 +5,7 @@ Type = require './type'
 Model = require './model'
 Resource = require './resource'
 
-DEFAULT_TYPE_AND_ACCEPT =
-  'Content-Type': 'application/vnd.api+json'
-  'Accept': 'application/vnd.api+json'
+DEFAULT_HEADERS = require './default-headers'
 
 RESERVED_TOP_LEVEL_KEYS = ['meta', 'links', 'linked', 'data']
 
@@ -32,7 +30,7 @@ class JSONAPIClient extends Model
     method = method.toUpperCase()
     fullURL = @root + url
     fullPayload = mergeInto {}, @params, payload
-    allHeaders = mergeInto {}, DEFAULT_TYPE_AND_ACCEPT, @headers, headers
+    allHeaders = mergeInto {}, DEFAULT_HEADERS, @headers, headers
 
     if method in READ_OPS
       @update reads: @reads + 1
