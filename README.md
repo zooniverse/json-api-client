@@ -81,7 +81,7 @@ person.get('pets', {}).then (personsPets) ->
 # Set a link manually
 client.type('animals').create(name: 'Spot').save().then (spot) ->
   client.type('people').get('1').then (person) ->
-    person.update('links.pets', [spot.id]).save()
+    person.update('links.pets': [spot.id]).save()
 
 # Add an item to a link (instead of replacing the whole thing)
 client.type('people').get('1').addLink 'pets', [rex.id, rover.id]
