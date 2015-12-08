@@ -16,5 +16,13 @@
     "browserify": "^11.1.0",
     "coffee-script": "^1.10.0",
     "onchange": "^2.0.0"
+  },
+  "homepage": "https://github.com/zooniverse/json-api-client",
+  "bugs": {
+    "url": "https://github.com/zooniverse/json-api-client/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url" : "https://github.com/zooniverse/json-api-client.git"
   }
 }
