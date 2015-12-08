@@ -2,6 +2,7 @@
   "name": "json-api-client",
   "version": "2.0.0",
   "main": "./lib/json-api-client",
+  "license": "Apache-2.0",
   "scripts": {
     "start": "npm run compile; onchange ./src/* -- npm run compile",
     "build-browser-standalone": "npm run compile && browserify --entry ./lib/json-api-client.js --standalone JSONAPIClient | derequire > ./json-api-client.js",
