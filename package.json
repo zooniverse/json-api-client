@@ -9,7 +9,7 @@
     "compile": "coffee --compile --output ./lib ./src",
     "prepublish": "npm run compile"
   },
-  "peerDependencies": {
+  "dependencies": {
     "superagent": "^1.3.0"
   },
   "devDependencies": {
