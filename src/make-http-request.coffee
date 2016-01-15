@@ -5,6 +5,8 @@ normalizeUrl = require 'normalizeurl'
 if request.agent?
   request = request.agent()
 
+request.parse[DEFAULT_HEADERS['Accept']] = JSON.parse.bind JSON
+
 makeHTTPRequest = (method, url, data, headers = {}, modify) ->
   originalArguments = Array::slice.call arguments # In case we need to retry
   method = method.toLowerCase()
