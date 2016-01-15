@@ -5,6 +5,9 @@ normalizeUrl = require 'normalizeurl'
 if request.agent?
   request = request.agent()
 
+# Superagent will only auto-parse responses from a Content-Type header it recognizes.
+# Add the Accept in use by the JSON API spec, which is what will be sent back from the server.
+request.parse ?= {}
 request.parse[DEFAULT_HEADERS['Accept']] = JSON.parse.bind JSON
 
 makeHTTPRequest = (method, url, data, headers = {}, modify) ->
