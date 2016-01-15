@@ -31,7 +31,7 @@ makeHTTPRequest = (method, url, data, headers = {}, modify) ->
 
     req.end (error, response) ->
       if error?.status is 408
-        makeHTTPRequest.apply null, originalArguments
+        resolve makeHTTPRequest.apply null, originalArguments
       else if error?
         reject response
       else
