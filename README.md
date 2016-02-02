@@ -1,8 +1,8 @@
 # JSON-API Client
 
-A client for the unfortunately named JSON API spec <http://jsonapi.org/>
+A client for the pre-release version of the JSON API spec <http://jsonapi.org/> used by Zooniverse Panoptes.
 
-Requires a native (or polyfilled) `Promise` class.
+Requires a native or polyfilled `Promise` class.
 
 ## Setting up a client
 

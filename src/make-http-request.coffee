@@ -15,6 +15,10 @@ makeHTTPRequest = (method, url, data, headers = {}, modify) ->
   method = method.toLowerCase()
   url = normalizeUrl url
 
+  if method is 'get'
+    for key, value of data when Array.isArray value
+      data[key] = value.join ','
+
   new Promise (resolve, reject) ->
     req = switch method
       when 'get' then request.get(url).query data
