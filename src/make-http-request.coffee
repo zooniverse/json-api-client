@@ -2,6 +2,8 @@ request = require 'superagent'
 DEFAULT_HEADERS = require './default-headers'
 normalizeUrl = require 'normalizeurl'
 
+getsInProgress = {}
+
 if request.agent?
   request = request.agent()
 
@@ -19,7 +21,11 @@ makeHTTPRequest = (method, url, data, headers = {}, modify) ->
     for key, value of data when Array.isArray value
       data[key] = value.join ','
 
-  new Promise (resolve, reject) ->
+    requestID = "#{url} #{JSON.stringify data}"
+    if getsInProgress[requestID]?
+      return getsInProgress[requestID]
+
+  promisedRequest = new Promise (resolve, reject) ->
     req = switch method
       when 'get' then request.get(url).query data
       when 'head' then request.head(url).query data
@@ -37,11 +43,17 @@ makeHTTPRequest = (method, url, data, headers = {}, modify) ->
       req = modify req
 
     req.end (error, response) ->
+      delete getsInProgress[requestID]
       if error?.status is 408
         resolve makeHTTPRequest.apply null, originalArguments
       else if error?
         reject response
       else
         resolve response
+
+  if method is 'get'
+    getsInProgress[requestID] = promisedRequest
+
+  promisedRequest
 
 module.exports = makeHTTPRequest
