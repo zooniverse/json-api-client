@@ -44,12 +44,13 @@ makeHTTPRequest = (method, url, data, headers = {}, modify) ->
 
     req.end (error, response) ->
       delete getsInProgress[requestID]
+
       if error?.status is 408
         resolve makeHTTPRequest.apply null, originalArguments
-      else if error?
+      else if error? and response in error is false
         reject response
       else
-        resolve response
+        resolve error or response
 
   if method is 'get'
     getsInProgress[requestID] = promisedRequest
