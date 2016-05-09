@@ -62,7 +62,3 @@ module.exports = class Type extends Emitter
 
   _getURL: ->
     ['', @_name, arguments...].join '/'
-
-  createResource: ->
-    console?.warn 'Use Type::create, not ::createResource', arguments...
-    @create arguments...

@@ -38,10 +38,6 @@ makeHTTPRequest = (method, url, data, headers = {}, modify) ->
     if req.withCredentials?
       req = req.withCredentials()
 
-    if modify?
-      console.warn 'Request modification is a sloppy idea; is anything actually doing this? Figure out something else.'
-      req = modify req
-
     req.end (error, response) ->
       delete getsInProgress[requestID]
       if error?.status is 408

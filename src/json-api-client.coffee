@@ -104,17 +104,9 @@ class JSONAPIClient extends Model
     @_typesCache[name] ?= new Type name, this
     @_typesCache[name]
 
-  createType: ->
-    console?.warn 'Use JSONAPIClient::type, not ::createType', arguments...
-    @type arguments...
-
 module.exports = JSONAPIClient
 module.exports.makeHTTPRequest = makeHTTPRequest
 module.exports.Emitter = Emitter
 module.exports.Type = Type
 module.exports.Model = Model
 module.exports.Resource = Resource
-
-Object.defineProperty module.exports, 'util', get: ->
-  console?.warn 'makeHTTPRequest is available directly from the JSONAPIClient object, no need for `util`'
-  {makeHTTPRequest}
