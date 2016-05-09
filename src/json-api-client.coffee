@@ -27,31 +27,35 @@ class JSONAPIClient extends Model
     @_typesCache = {}
     mergeInto this, mixins
 
+  beforeEveryRequest: ->
+    Promise.resolve();
+
   request: (method, url, payload, headers) ->
-    method = method.toUpperCase()
-    fullURL = @root + url
-    fullPayload = mergeInto {}, @params, payload
-    allHeaders = mergeInto {}, DEFAULT_HEADERS, @headers, headers
+    @beforeEveryRequest().then =>
+      method = method.toUpperCase()
+      fullURL = @root + url
+      fullPayload = mergeInto {}, @params, payload
+      allHeaders = mergeInto {}, DEFAULT_HEADERS, @headers, headers
 
-    if method in READ_OPS
-      @update reads: @reads + 1
-    else if method in WRITE_OPS
-      @update writes: @writes + 1
+      if method in READ_OPS
+        @update reads: @reads + 1
+      else if method in WRITE_OPS
+        @update writes: @writes + 1
 
-    request = makeHTTPRequest method, fullURL, fullPayload, allHeaders
+      request = makeHTTPRequest method, fullURL, fullPayload, allHeaders
 
-    request
-      .catch =>
-        null
-      .then =>
-        if method in READ_OPS
-          @update reads: @reads - 1
-        else if method in WRITE_OPS
-          @update writes: @writes - 1
+      request
+        .catch =>
+          null
+        .then =>
+          if method in READ_OPS
+            @update reads: @reads - 1
+          else if method in WRITE_OPS
+            @update writes: @writes - 1
 
-    request
-      .then @processResponse.bind this
-      .catch @handleError.bind this
+      request
+        .then @processResponse.bind this
+        .catch @handleError.bind this
 
   for method in ['get', 'post', 'put', 'delete'] then do (method) =>
     @::[method] = ->
