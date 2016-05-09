@@ -21,36 +21,41 @@ class JSONAPIClient extends Model
 
   _typesCache: null # Types that have been defined
 
-  constructor: (@root, @headers = {}) ->
+  constructor: (@root, @headers = {}, mixins) ->
     @params = {}
     super null
     @_typesCache = {}
+    mergeInto this, mixins
+
+  beforeEveryRequest: ->
+    Promise.resolve();
 
   request: (method, url, payload, headers) ->
-    method = method.toUpperCase()
-    fullURL = @root + url
-    fullPayload = mergeInto {}, @params, payload
-    allHeaders = mergeInto {}, DEFAULT_HEADERS, @headers, headers
+    @beforeEveryRequest().then =>
+      method = method.toUpperCase()
+      fullURL = @root + url
+      fullPayload = mergeInto {}, @params, payload
+      allHeaders = mergeInto {}, DEFAULT_HEADERS, @headers, headers
 
-    if method in READ_OPS
-      @update reads: @reads + 1
-    else if method in WRITE_OPS
-      @update writes: @writes + 1
+      if method in READ_OPS
+        @update reads: @reads + 1
+      else if method in WRITE_OPS
+        @update writes: @writes + 1
 
-    request = makeHTTPRequest method, fullURL, fullPayload, allHeaders
+      request = makeHTTPRequest method, fullURL, fullPayload, allHeaders
 
-    request
-      .catch =>
-        null
-      .then =>
-        if method in READ_OPS
-          @update reads: @reads - 1
-        else if method in WRITE_OPS
-          @update writes: @writes - 1
+      request
+        .catch =>
+          null
+        .then =>
+          if method in READ_OPS
+            @update reads: @reads - 1
+          else if method in WRITE_OPS
+            @update writes: @writes - 1
 
-    request
-      .then @processResponse.bind this
-      .catch @handleError.bind this
+      request
+        .then @processResponse.bind this
+        .catch @handleError.bind this
 
   for method in ['get', 'post', 'put', 'delete'] then do (method) =>
     @::[method] = ->
@@ -104,17 +109,9 @@ class JSONAPIClient extends Model
     @_typesCache[name] ?= new Type name, this
     @_typesCache[name]
 
-  createType: ->
-    console?.warn 'Use JSONAPIClient::type, not ::createType', arguments...
-    @type arguments...
-
 module.exports = JSONAPIClient
 module.exports.makeHTTPRequest = makeHTTPRequest
 module.exports.Emitter = Emitter
 module.exports.Type = Type
 module.exports.Model = Model
 module.exports.Resource = Resource
-
-Object.defineProperty module.exports, 'util', get: ->
-  console?.warn 'makeHTTPRequest is available directly from the JSONAPIClient object, no need for `util`'
-  {makeHTTPRequest}
