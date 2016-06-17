@@ -200,8 +200,13 @@ class Resource extends Model
     delete @_linksCache[name]
 
   _getHeadersForModification: ->
-    'If-Unmodified-Since': @_getHeader 'Last-Modified'
-    'If-Match': @_getHeader 'ETag'
+    headers =
+      'If-Unmodified-Since': @_getHeader 'Last-Modified'
+      'If-Match': @_getHeader 'ETag'
+    for header, value of headers
+      unless value?
+        delete headers[header]
+    headers
 
   _getHeader: (header) ->
     header = header.toLowerCase()
