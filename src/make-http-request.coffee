@@ -43,9 +43,7 @@ makeHTTPRequest = (method, url, data, headers = {}, modify) ->
       if error?.status is 408
         resolve makeHTTPRequest.apply null, originalArguments
       else if error?
-        # Prefer rejecting with the response, since it'll have more specific information.
-        # TODO: Reject with the error as expected and access the response through `error.response` in the handler.
-        reject response ? error
+        reject error
       else
         resolve response
 
