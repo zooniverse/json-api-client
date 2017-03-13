@@ -28,7 +28,7 @@ class JSONAPIClient extends Model
     mergeInto this, mixins
 
   beforeEveryRequest: ->
-    console.log 'using local json-api-client'
+    console.log 'using GitHub branch of json-api-client'
     Promise.resolve();
 
   request: (method, url, payload, headers) ->
