@@ -28,7 +28,6 @@ class JSONAPIClient extends Model
     mergeInto this, mixins
 
   beforeEveryRequest: ->
-    console.log 'using GitHub branch of json-api-client'
     Promise.resolve();
 
   request: (method, url, payload, headers) ->
@@ -102,9 +101,9 @@ class JSONAPIClient extends Model
     if attributeTypeName?
       type._links[attributeName].type = attributeTypeName
 
-  handleError: (err) ->
+  handleError: ->
     # Override this as necessary.
-    Promise.reject err
+    Promise.reject arguments...
 
   type: (name) ->
     @_typesCache[name] ?= new Type name, this
