@@ -12,7 +12,7 @@ if request.agent?
 request.parse ?= {}
 request.parse[DEFAULT_HEADERS['Accept']] = JSON.parse.bind JSON
 
-makeHTTPRequest = (method, url, data, headers = {}, modify) ->
+makeHTTPRequest = (method, url, data, headers = {}, query) ->
   originalArguments = Array::slice.call arguments # In case we need to retry
   method = method.toLowerCase()
   url = normalizeUrl url
@@ -29,8 +29,8 @@ makeHTTPRequest = (method, url, data, headers = {}, modify) ->
     req = switch method
       when 'get' then request.get(url).query data
       when 'head' then request.head(url).query data
-      when 'put' then request.put(url).send data
-      when 'post' then request.post(url).send data
+      when 'put' then request.put(url).query(query).send data
+      when 'post' then request.post(url).query(query).send data
       when 'delete' then request.del(url).query data
 
     req = req.set headers

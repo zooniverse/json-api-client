@@ -30,7 +30,7 @@ class JSONAPIClient extends Model
   beforeEveryRequest: ->
     Promise.resolve();
 
-  request: (method, url, payload, headers) ->
+  request: (method, url, payload, headers, query) ->
     @beforeEveryRequest().then =>
       method = method.toUpperCase()
       fullURL = @root + url
@@ -42,7 +42,7 @@ class JSONAPIClient extends Model
       else if method in WRITE_OPS
         @update writes: @writes + 1
 
-      request = makeHTTPRequest method, fullURL, fullPayload, allHeaders
+      request = makeHTTPRequest method, fullURL, fullPayload, allHeaders, query
 
       request
         .catch =>
