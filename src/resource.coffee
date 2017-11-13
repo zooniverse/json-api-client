@@ -33,7 +33,7 @@ class Resource extends Model
       @_type.emit 'change'
     value
 
-  save: ->
+  save: (query={}) ->
     payload = {}
     changes = @toJSON.call @getChangesSinceSave()
     payload[@_type._name] = changes
@@ -49,10 +49,10 @@ class Resource extends Model
         null
       .then =>
         save = if @id
-          @refresh(true).then =>
-            @_type._client.put @_getURL(), payload, @_getHeadersForModification()
+          @refresh(true, query).then =>
+            @_type._client.put @_getURL(), payload, @_getHeadersForModification(), query 
         else
-          @_type._client.post @_type._getURL(), payload
+          @_type._client.post @_type._getURL(), payload, {}, query
 
         new ResourcePromise save.then ([result]) =>
           for key of changes
@@ -73,13 +73,13 @@ class Resource extends Model
       changes[key] = @[key]
     changes
 
-  refresh: (saveChanges) ->
+  refresh: (saveChanges, query={}) ->
     if saveChanges
       changes = @getChangesSinceSave()
-      @refresh().then =>
+      @refresh(false, query).then =>
         @update changes
     else if @id
-      @_type._client.get @_getURL()
+      @_type._client.get @_getURL(), query
     else
       throw new Error 'Can\'t refresh a resource with no ID'
 
@@ -97,7 +97,7 @@ class Resource extends Model
         null
       .then =>
         deletion = if @id
-          @refresh(true).then =>
+          @refresh(true, query).then =>
             @_type._client.delete @_getURL(), null, @_getHeadersForModification()
         else
           Promise.resolve()
