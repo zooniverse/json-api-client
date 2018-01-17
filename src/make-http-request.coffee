@@ -1,4 +1,5 @@
-request = require 'superagent'
+cacheModuleConfig = { defaultExpiration: 10, verbose: true }
+request = require('superagent-cache')(null, cacheModuleConfig)
 DEFAULT_HEADERS = require './default-headers'
 normalizeUrl = require 'normalizeurl'
 
