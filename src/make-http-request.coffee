@@ -31,7 +31,7 @@ makeHTTPRequest = (method, url, data, headers = {}, query) ->
       when 'head' then request.head(url).query data
       when 'put' then request.put(url).query(query).send data
       when 'post' then request.post(url).query(query).send data
-      when 'delete' then request.del(url).query data
+      when 'delete' then request.del(url).query(query).query data
 
     req = req.set headers
 
