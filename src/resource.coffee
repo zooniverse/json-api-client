@@ -91,14 +91,14 @@ class Resource extends Model
     else
       throw new Error 'Can\'t uncache a resource with no ID'
 
-  delete: ->
+  delete: (query={})->
     @_write = @_write
       .catch =>
         null
       .then =>
         deletion = if @id
           @refresh(true, query).then =>
-            @_type._client.delete @_getURL(), null, @_getHeadersForModification()
+            @_type._client.delete @_getURL(), null, @_getHeadersForModification(), query
         else
           Promise.resolve()
 
