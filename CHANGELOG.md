@@ -1,5 +1,13 @@
 # Change Log
 
+## [v4.0.0-0](https://github.com/zooniverse/json-api-client/tree/v4.0.0-0) (2018-06-22)
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v3.3.1...v4.0.0-0)
+
+**Merged pull requests:**
+
+- Upgrade packages [\#46](https://github.com/zooniverse/json-api-client/pull/46) ([eatyourgreens](https://github.com/eatyourgreens))
+- Add package-lock [\#45](https://github.com/zooniverse/json-api-client/pull/45) ([eatyourgreens](https://github.com/eatyourgreens))
+
 ## [v3.3.1](https://github.com/zooniverse/json-api-client/tree/v3.3.1) (2018-04-24)
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v3.3.0...v3.3.1)
 
