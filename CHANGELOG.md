@@ -1,5 +1,16 @@
 # Change Log
 
+## [v4.0.1](https://github.com/zooniverse/json-api-client/tree/v4.0.1) (2019-03-22)
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v4.0.0...v4.0.1)
+
+**Merged pull requests:**
+
+- \[Security\] Bump extend from 3.0.1 to 3.0.2 [\#49](https://github.com/zooniverse/json-api-client/pull/49) ([dependabot[bot]](https://github.com/apps/dependabot))
+- \[Security\] Bump cached-path-relative from 1.0.1 to 1.0.2 [\#48](https://github.com/zooniverse/json-api-client/pull/48) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v4.0.0](https://github.com/zooniverse/json-api-client/tree/v4.0.0) (2018-06-25)
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v4.0.0-0...v4.0.0)
+
 ## [v4.0.0-0](https://github.com/zooniverse/json-api-client/tree/v4.0.0-0) (2018-06-22)
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v3.3.1...v4.0.0-0)
 
