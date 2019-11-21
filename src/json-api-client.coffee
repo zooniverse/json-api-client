@@ -110,7 +110,8 @@ class JSONAPIClient extends Model
     @_typesCache[name]
 
 module.exports = JSONAPIClient
-module.exports.makeHTTPRequest = makeHTTPRequest
+module.exports.makeHTTPRequest = makeHTTPRequest.makeHTTPRequest
+module.exports.makeCredentialHTTPRequest = makeHTTPRequest.makeCredentialHTTPRequest
 module.exports.Emitter = Emitter
 module.exports.Type = Type
 module.exports.Model = Model

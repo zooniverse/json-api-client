@@ -13,6 +13,14 @@ request.parse ?= {}
 request.parse[DEFAULT_HEADERS['Accept']] = JSON.parse.bind JSON
 
 makeHTTPRequest = (method, url, data, headers = {}, query) ->
+  makeRequest(request, method, url, data, headers = {}, query)
+
+makeCredentialHTTPRequest = (method, url, data, headers = {}, query) ->
+  if request.withCredentials?
+      request = request.withCredentials()
+  makeRequest(request, method, url, data, headers = {}, query)
+
+makeRequest = (request, method, url, data, headers = {}, query) ->
   originalArguments = Array::slice.call arguments # In case we need to retry
   method = method.toLowerCase()
   url = normalizeUrl url
@@ -35,9 +43,6 @@ makeHTTPRequest = (method, url, data, headers = {}, query) ->
 
     req = req.set headers
 
-    if req.withCredentials?
-      req = req.withCredentials()
-
     req.end (error, response) ->
       delete getsInProgress[requestID]
       if error?.status is 408
@@ -54,4 +59,4 @@ makeHTTPRequest = (method, url, data, headers = {}, query) ->
 
   promisedRequest
 
-module.exports = makeHTTPRequest
+module.exports = { makeHTTPRequest, makeCredentialHTTPRequest }
