@@ -13,14 +13,14 @@ request.parse ?= {}
 request.parse[DEFAULT_HEADERS['Accept']] = JSON.parse.bind JSON
 
 makeHTTPRequest = (method, url, data, headers = {}, query) ->
-  makeRequest(request, method, url, data, headers = {}, query)
+  makeRequest(request, method, url, data, headers, query)
 
 makeCredentialHTTPRequest = (method, url, data, headers = {}, query) ->
   if request.withCredentials?
       request = request.withCredentials()
-  makeRequest(request, method, url, data, headers = {}, query)
+  makeRequest(request, method, url, data, headers, query)
 
-makeRequest = (request, method, url, data, headers = {}, query) ->
+makeRequest = (request, method, url, data, headers, query) ->
   originalArguments = Array::slice.call arguments # In case we need to retry
   method = method.toLowerCase()
   url = normalizeUrl url
