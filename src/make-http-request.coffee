@@ -4,21 +4,22 @@ normalizeUrl = require 'normalizeurl'
 
 getsInProgress = {}
 
-if request.agent?
-  request = request.agent()
-
 # Superagent will only auto-parse responses from a Content-Type header it recognizes.
 # Add the Accept in use by the JSON API spec, which is what will be sent back from the server.
 request.parse ?= {}
 request.parse[DEFAULT_HEADERS['Accept']] = JSON.parse.bind JSON
 
+# isolate the credential requests from the superagent singleton
+# via the agent() to ensure correct credentials for both request types
+# http://visionmedia.github.io/superagent/#agents-for-global-state
+if request.agent? && request.withCredentials?
+  credentialRequest = request.agent().withCredentials()
+
 makeHTTPRequest = (method, url, data, headers = {}, query) ->
   makeRequest(request, method, url, data, headers, query)
 
 makeCredentialHTTPRequest = (method, url, data, headers = {}, query) ->
-  if request.withCredentials?
-    request = request.withCredentials()
-  makeRequest(request, method, url, data, headers, query)
+  makeRequest(credentialRequest, method, url, data, headers, query)
 
 makeRequest = (request, method, url, data, headers, query) ->
   originalArguments = Array::slice.call arguments # In case we need to retry
