@@ -17,7 +17,7 @@ makeHTTPRequest = (method, url, data, headers = {}, query) ->
 
 makeCredentialHTTPRequest = (method, url, data, headers = {}, query) ->
   if request.withCredentials?
-      request = request.withCredentials()
+    request = request.withCredentials()
   makeRequest(request, method, url, data, headers, query)
 
 makeRequest = (request, method, url, data, headers, query) ->
