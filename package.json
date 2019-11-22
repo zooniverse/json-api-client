@@ -6,7 +6,7 @@
   "scripts": {
     "start": "npm run compile; onchange ./src/* -- npm run compile",
     "compile": "coffee --compile --output ./lib ./src",
-    "prepublish": "npm run compile"
+    "preversion": "npm run compile"
   },
   "dependencies": {
     "normalizeurl": "~0.1.3",
