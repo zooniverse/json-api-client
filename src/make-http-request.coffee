@@ -12,8 +12,14 @@ request.parse[DEFAULT_HEADERS['Accept']] = JSON.parse.bind JSON
 # isolate the credential requests from the superagent singleton
 # via the agent() to ensure correct credentials for both request types
 # http://visionmedia.github.io/superagent/#agents-for-global-state
-if request.agent? && request.withCredentials?
-  credentialRequest = request.agent().withCredentials()
+if request.agent?
+  credentialRequest = request.agent()
+  if credentialRequest.withCredentials?
+    credentialRequest = credentialRequest.withCredentials()
+else
+  # ensure the credentialRequest is set, though it would use the
+  # singleton superagent and fail to correctly send credential requests
+  credentialRequest = request
 
 makeHTTPRequest = (method, url, data, headers = {}, query) ->
   makeRequest(request, method, url, data, headers, query)
