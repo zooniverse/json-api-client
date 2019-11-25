@@ -15,7 +15,7 @@
   "devDependencies": {
     "browserify": "^16.2.2",
     "coffee-script": "^1.10.0",
-    "onchange": "^2.0.0"
+    "onchange": "^6.1.0"
   },
   "homepage": "https://github.com/zooniverse/json-api-client",
   "bugs": {
