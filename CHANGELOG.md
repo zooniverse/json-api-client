@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased]
+## [v5.0.3]
 
-[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.0.2...master)
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.0.2...v5.0.3)
 
 **Security fixes:**
 
