@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.0.2...master)
+
+**Security fixes:**
+
+- \[Security\] Bump path-parse from 1.0.5 to 1.0.7 [\#61](https://github.com/zooniverse/json-api-client/pull/61) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- \[Security\] Bump glob-parent from 5.1.0 to 5.1.2 [\#60](https://github.com/zooniverse/json-api-client/pull/60) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- \[Security\] Bump elliptic from 6.5.3 to 6.5.4 [\#59](https://github.com/zooniverse/json-api-client/pull/59) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- \[Security\] Bump tree-kill from 1.2.1 to 1.2.2 [\#58](https://github.com/zooniverse/json-api-client/pull/58) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+
 ## [v5.0.2](https://github.com/zooniverse/json-api-client/tree/v5.0.2) (2020-08-03)
 
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.0.1...v5.0.2)
