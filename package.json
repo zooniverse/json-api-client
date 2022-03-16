@@ -1,6 +1,6 @@
 {
   "name": "json-api-client",
-  "version": "5.0.3",
+  "version": "5.0.4",
   "main": "./lib/json-api-client",
   "license": "Apache-2.0",
   "scripts": {
