@@ -1,5 +1,17 @@
 # Changelog
 
+## [v5.0.4]
+
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.0.3...v5.0.4)
+
+**Merged pull requests:**
+
+- Update normalizeurl to 1.0.0 [\#64](https://github.com/zooniverse/json-api-client/pull/64) ([shaunanoordin](https://github.com/shaunanoordin))
+
+**Security fixes:**
+
+- \[Security\] Bump cached-path-relative from 1.0.2 to 1.1.0 [\#63](https://github.com/zooniverse/json-api-client/pull/63) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+
 ## [v5.0.3]
 
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.0.2...v5.0.3)
