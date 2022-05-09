@@ -1,5 +1,14 @@
 # Changelog
 
+## [v5.0.5]
+
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.0.4...v5.0.5)
+
+**Merged pull requests:**
+
+- Bump onchange from 6.1.0 to 7.1.0 [\#67](https://github.com/zooniverse/json-api-client/pull/67) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump browserify from 16.2.2 to 17.0.0 [\#66](https://github.com/zooniverse/json-api-client/pull/66) ([dependabot[bot]](https://github.com/apps/dependabot))
+
 ## [v5.0.4]
 
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.0.3...v5.0.4)
