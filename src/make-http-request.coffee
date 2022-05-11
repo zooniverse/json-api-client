@@ -6,8 +6,8 @@ getsInProgress = {}
 
 # Superagent will only auto-parse responses from a Content-Type header it recognizes.
 # Add the Accept in use by the JSON API spec, which is what will be sent back from the server.
-request.parse ?= {}
-request.parse[DEFAULT_HEADERS['Accept']] = JSON.parse.bind JSON
+parseJSON = request.parse['application/json']
+request.parse[DEFAULT_HEADERS['Accept']] = parseJSON
 
 # isolate the credential requests from the superagent singleton
 # via the agent() to ensure correct credentials for both request types
