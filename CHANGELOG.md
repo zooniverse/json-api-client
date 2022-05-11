@@ -2,6 +2,14 @@
 
 ## [v5.1.0]
 
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.1.0...v5.1.1)
+
+**Merged pull requests:**
+
+- Use the default JSON parser [\#69](https://github.com/zooniverse/json-api-client/pull/69) ([eatyourgreens](https://github.com/eatyourgreens))
+
+## [v5.1.0]
+
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.0.5...v5.1.0)
 
 **Merged pull requests:**
