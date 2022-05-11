@@ -1,6 +1,6 @@
 # Changelog
 
-## [v5.1.0]
+## [v5.1.1]
 
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.1.0...v5.1.1)
 
