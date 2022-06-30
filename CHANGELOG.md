@@ -1,5 +1,15 @@
 # Changelog
 
+## [v5.1.2]
+
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.1.1...v5.1.2)
+
+**Merged pull requests:**
+
+- Bump shell-quote from 1.6.1 to 1.7.3 [\#73](https://github.com/zooniverse/json-api-client/pull/73) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump superagent from 7.1.4 to 7.1.6 [\#71](https://github.com/zooniverse/json-api-client/pull/71) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump superagent from 7.1.3 to 7.1.4 [\#70](https://github.com/zooniverse/json-api-client/pull/70) ([dependabot[bot]](https://github.com/apps/dependabot))
+
 ## [v5.1.1]
 
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.1.0...v5.1.1)
