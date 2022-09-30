@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## [v6.0.1]
 
-[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v6.0.0...master)
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v6.0.0...v6.0.1)
 
 **Merged pull requests:**
 
