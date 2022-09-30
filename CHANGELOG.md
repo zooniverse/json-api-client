@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v6.0.0...master)
+
+**Merged pull requests:**
+
+- Bump superagent from 8.0.0 to 8.0.1 [\#75](https://github.com/zooniverse/json-api-client/pull/75) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+
 ## [v6.0.0]
 
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v5.1.2...v6.0.0)
