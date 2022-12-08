@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "normalizeurl": "~1.0.0",
-    "superagent": "^8.0.5"
+    "superagent": "^8.0.6"
   },
   "devDependencies": {
     "browserify": "^17.0.0",
