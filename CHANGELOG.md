@@ -1,5 +1,11 @@
 # Changelog
 
+## [v6.0.6]
+
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v6.0.5...v6.0.6)
+
+- Require superagent 8.0.6 or higher.
+
 ## [v6.0.5]
 
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v6.0.4...v6.0.5)
@@ -7,7 +13,7 @@
 **Merged pull requests:**
 
 - Bump qs and formidble [\#80](https://github.com/zooniverse/json-api-client/pull/80) ([dependabot[bot]](https://github.com/apps/dependabot))
-- Bump superagent from 8.0.3 to 8.0.4 [\#79](https://github.com/zooniverse/json-api-client/pull/79) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump superagent from 8.0.4 to 8.0.5 [\#79](https://github.com/zooniverse/json-api-client/pull/79) ([dependabot[bot]](https://github.com/apps/dependabot))
 
 ## [v6.0.4]
 
