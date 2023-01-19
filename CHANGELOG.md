@@ -1,5 +1,11 @@
 # Changelog
 
+## [v6.0.7]
+
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v6.0.6...v6.0.7)
+
+- Require superagent 8.0.8 or higher.
+
 ## [v6.0.6]
 
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v6.0.5...v6.0.6)
