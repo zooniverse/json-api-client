@@ -1,5 +1,11 @@
 # Changelog
 
+## [v7.0.0]
+
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v6.0.7...v7.0.0)
+
+- Build with CoffeeScript 2.7.
+
 ## [v6.0.7]
 
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v6.0.6...v6.0.7)
