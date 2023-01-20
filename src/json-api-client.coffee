@@ -22,8 +22,8 @@ class JSONAPIClient extends Model
   _typesCache: null # Types that have been defined
 
   constructor: (@root, @headers = {}, mixins) ->
-    @params = {}
     super null
+    @params = {}
     @_typesCache = {}
     mergeInto this, mixins
 
