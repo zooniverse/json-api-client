@@ -11,14 +11,15 @@ class Resource extends Model
   _savingKeys: null
   _write: Promise.resolve()
 
-  constructor: (@_type) ->
+  constructor: (_type) ->
+    super _type
+    @_type = _type
     unless @_type?
       throw new Error 'Don\'t call the Resource constructor directly, use `client.type("things").create({});`'
     @_headers = {}
     @_meta = {}
     @_linksCache = {}
     @_savingKeys = {}
-    super null
     @_type.emit 'change'
     @emit 'create'
 
@@ -26,7 +27,7 @@ class Resource extends Model
     @_meta[key]
 
   update: ->
-    value = super
+    value = super.update arguments...
     if @id and @_type._resourcesCache[@id] isnt this
       @_type._resourcesCache[@id] = this
       @_type._resourcesCache[@href] = this if @href?

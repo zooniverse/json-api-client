@@ -20,7 +20,7 @@ module.exports = class Model extends Emitter
   _changedKeys: null
 
   constructor: (configs...) ->
-    super
+    super configs...
     @_changedKeys = []
     mergeInto this, configs...
     @emit 'create'
@@ -62,4 +62,4 @@ module.exports = class Model extends Emitter
 
   destroy: ->
     @_changedKeys.splice 0
-    super
+    super.destroy()

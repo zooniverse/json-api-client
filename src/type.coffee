@@ -12,7 +12,7 @@ module.exports = class Type extends Emitter
   _resourcesCache: null
 
   constructor: (@_name, @_client) ->
-    super
+    super null
     @_links = {}
     @_resourcesCache = {}
     unless @_name and @_client?
