@@ -1,5 +1,11 @@
 # Changelog
 
+## [v7.0.1]
+
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v7.0.0...v7.0.1)
+
+* Refactor makeHTTPRequest by @eatyourgreens in https://github.com/zooniverse/json-api-client/pull/83
+
 ## [v7.0.0]
 
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v6.0.7...v7.0.0)
