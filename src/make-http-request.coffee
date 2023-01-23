@@ -1,4 +1,4 @@
-request = require 'superagent'
+superagent = require 'superagent'
 DEFAULT_HEADERS = require './default-headers'
 normalizeUrl = require 'normalizeurl'
 
@@ -6,20 +6,19 @@ getsInProgress = {}
 
 # Superagent will only auto-parse responses from a Content-Type header it recognizes.
 # Add the Accept in use by the JSON API spec, which is what will be sent back from the server.
-parseJSON = request.parse['application/json']
-request.parse[DEFAULT_HEADERS['Accept']] = parseJSON
+parseJSON = superagent.parse['application/json']
+superagent.parse[DEFAULT_HEADERS['Accept']] = parseJSON
 
 # isolate the credential requests from the superagent singleton
 # via the agent() to ensure correct credentials for both request types
 # http://visionmedia.github.io/superagent/#agents-for-global-state
-if request.agent?
-  credentialRequest = request.agent()
+request = superagent
+credentialRequest = superagent
+if superagent.agent?
+  request = superagent.agent()
+  credentialRequest = superagent.agent()
   if credentialRequest.withCredentials?
     credentialRequest = credentialRequest.withCredentials()
-else
-  # ensure the credentialRequest is set, though it would use the
-  # singleton superagent and fail to correctly send credential requests
-  credentialRequest = request
 
 makeHTTPRequest = (method, url, data, headers = {}, query) ->
   makeRequest(request, method, url, data, headers, query)
