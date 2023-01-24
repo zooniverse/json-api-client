@@ -1,5 +1,13 @@
 # Changelog
 
+## [v7.0.2]
+
+Fixes a bug where resource API methods are undefined after calling `client.type().get()`.
+
+[Full Changelog](https://github.com/zooniverse/json-api-client/compare/v7.0.1...v7.0.2)
+
+* Add API methods to ResourcePromise by @eatyourgreens in https://github.com/zooniverse/json-api-client/pull/84
+
 ## [v7.0.1]
 
 [Full Changelog](https://github.com/zooniverse/json-api-client/compare/v7.0.0...v7.0.1)
