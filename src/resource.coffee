@@ -1,8 +1,5 @@
 Model = require './model'
 
-# Turn a JSON-API "href" template into a usable URL.
-PLACEHOLDERS_PATTERN = /{(.+?)}/g
-
 class Resource extends Model
   _type: null
   _headers: null
@@ -165,7 +162,7 @@ class Resource extends Model
     context = {}
     context[@_type._name] = this
 
-    href.replace PLACEHOLDERS_PATTERN, (_, path) ->
+    href.replace /{(.+?)}/g, (_, path) ->
       segments = path.split '.'
 
       value = context
@@ -239,21 +236,31 @@ class ResourcePromise
       value[index]
     this
 
-  for methodName, method of Resource.prototype
-    if typeof method is 'function' and methodName not of this.prototype
-      do (methodName) =>
-        @::[methodName] = (args...) ->
-          @_promise = @_promise.then (promisedValue) =>
-            results = for resource in [].concat promisedValue
-              result = resource[methodName] args...
-              if result instanceof @constructor
-                result = result._promise
-              result
-            if Array.isArray promisedValue
-              Promise.all results
-            else
-              results[0]
-          this
+  api: (method, args...) ->
+    @_promise = @_promise.then (promisedValue) =>
+      resources = [].concat promisedValue
+      results = for resource in resources
+        result = resource[method] args...
+        if result instanceof @constructor
+          result = result._promise
+        result
+      if Array.isArray promisedValue
+        Promise.all results
+      else
+        results[0]
+    this
+
+  delete: (args...) ->
+    @api 'delete', args...
+
+  get: (args...) ->
+    @api 'get', args...
+
+  save: (args...) ->
+    @api 'save', args...
+
+  update: (args...) ->
+    @api 'update', args...
 
 module.exports = Resource
 module.exports.Promise = ResourcePromise
