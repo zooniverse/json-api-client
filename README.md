@@ -1,5 +1,7 @@
 # JSON-API Client
 
+**Deprecated** the code for the JSON-API client has moved to the [`panoptes-client`](https://github.com/zooniverse/panoptes-javascript-client) package.
+
 A client for the pre-release version of the JSON API spec <http://jsonapi.org/> used by Zooniverse Panoptes.
 
 Requires a native or polyfilled `Promise` class.
